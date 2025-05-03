@@ -5,9 +5,11 @@
 
 #include "sensfus/utils/rand_generator.h"
 
-constexpr std::size_t DIM = 4;
+namespace sensfus {
+namespace utils {
+namespace sensfus_test {
 
-using namespace sensfus::utils;
+constexpr std::size_t DIM = 4;
 
 using Scalar = double;
 using Generator = StdNormalGenerator<Scalar, DIM>;
@@ -51,4 +53,13 @@ TEST(StdNormalGeneratorTest, RoughlyStandardNormalDistribution) {
     EXPECT_NEAR(mean[i], 0.0, 0.1);  // Accept small statistical error
     EXPECT_NEAR(var[i], 1.0, 0.1);
   }
+}
+
+}  // namespace sensfus_test
+}  // namespace utils
+}  // namespace sensfus
+
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
