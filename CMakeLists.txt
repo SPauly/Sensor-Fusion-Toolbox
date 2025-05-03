@@ -55,6 +55,7 @@ enable_testing()
 # List with all tests to be created
 set(UTILS_TESTS
   rand_generator_test
+  timers_test
 )
 
 set(SINGLE_FILE_TESTS
