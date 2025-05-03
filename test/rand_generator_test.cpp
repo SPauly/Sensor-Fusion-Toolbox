@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <numeric>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include "sensfus/utils/rand_generator.h"
 

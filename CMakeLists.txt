@@ -34,11 +34,21 @@ FetchContent_MakeAvailable(Eigen)
 # Add the gui dependencies
 include(cmake/target_imgui_implot_glfw.cmake)
 
-add_executable(SensorSimulator
+set(SENSOR_SIM_TARGETS
   src/app/entry_point.cpp
   src/app/sensor_sim.cpp
   src/app/utils/layerstack.cpp
 )
+
+if(WIN32)
+  add_executable(SensorSimulator WIN32
+    ${SENSOR_SIM_TARGETS}
+  )
+else()
+  add_executable(SensorSimulator
+    ${SENSOR_SIM_TARGETS}
+  )
+endif()
 
 add_dependencies(SensorSimulator ${TARGET_LIBRARIES})
 
