@@ -18,7 +18,7 @@ include(FetchContent)
 FetchContent_Declare(
     Eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-    GIT_TAG 3.4.0 # Replace with the desired Eigen version
+    GIT_TAG 3.4.0 
 )
 
 FetchContent_MakeAvailable(Eigen)
@@ -27,6 +27,29 @@ FetchContent_MakeAvailable(Eigen)
 # Create libraries
 #----------------------------------#
 
+#----------------------------------#
+# Build the executables
+#----------------------------------#
+
+# Add the gui dependencies
+include(cmake/target_imgui_implot_glfw.cmake)
+
+add_executable(SensorSimulator
+  src/app/entry_point.cpp
+  src/app/sensor_sim.cpp
+  src/app/utils/layerstack.cpp
+)
+
+add_dependencies(SensorSimulator ${TARGET_LIBRARIES})
+
+target_include_directories(SensorSimulator PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
+target_link_libraries(SensorSimulator PRIVATE
+   ${TARGET_LIBRARIES}
+)
 
 #---------------------------------#
 # Setup Tests
