@@ -91,6 +91,7 @@ enable_testing()
 set(UTILS_TESTS
   rand_generator_test
   timers_test
+  types_test
 )
 
 set(SINGLE_FILE_TESTS
