@@ -4,8 +4,26 @@
 #include <Eigen/Dense>
 
 namespace sensfus {
+// -------------------------------------------------------
+// Basic Types
+// -------------------------------------------------------
 
 using ScalarType = float;
+
+struct SensVec2D {
+  ScalarType x;
+  ScalarType y;
+};
+struct SensVec3D {
+  ScalarType x;
+  ScalarType y;
+  ScalarType z;
+};
+
+// -------------------------------------------------------
+// ObjectState
+// -------------------------------------------------------
+
 using ObjectState2D =
     Eigen::Matrix<ScalarType, 6, 1>;  // x_k = (relative_position^T,
                                       // relative_velocity^t, acceleration^T)^T
