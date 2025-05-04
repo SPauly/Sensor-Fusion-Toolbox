@@ -27,6 +27,8 @@ FetchContent_MakeAvailable(Eigen)
 # Create libraries
 #----------------------------------#
 
+# TODO: Build library here
+
 #----------------------------------#
 # Build the executables
 #----------------------------------#
@@ -40,6 +42,7 @@ set(SENSOR_SIM_TARGETS
   src/app/radar_plot.cpp
   src/app/trajectory_planer.cpp
   src/app/utils/layerstack.cpp
+  src/radar_sim.cpp
 )
 
 if(WIN32)
@@ -61,6 +64,7 @@ target_include_directories(SensorSimulator PRIVATE
 
 target_link_libraries(SensorSimulator PRIVATE
    ${TARGET_LIBRARIES}
+   Eigen3::Eigen
 )
 
 #---------------------------------#

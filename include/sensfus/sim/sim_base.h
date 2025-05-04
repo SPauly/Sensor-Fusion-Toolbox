@@ -18,7 +18,7 @@ struct SimState {
 class SimBase {
  public:
   explicit SimBase() = default;
-  virtual ~SimBase() = default;
+  virtual ~SimBase() noexcept = default;
 
   /// @brief Starts the simulation environment. (This might start a thread or a
   /// process)

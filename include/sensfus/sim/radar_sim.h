@@ -7,22 +7,32 @@
 
 #include "sensfus/types.h"
 #include "sensfus/sim/sim_base.h"
+#include "sensfus/sim/object_model.h"
+#include "sensfus/sim/trajectory.h"
 
 namespace sensfus {
 namespace sim {
 
 struct RadarDataType {
-  std::vector<ScalarType> zx, zy;      // Measurement in 2D
-  std::vector<double> range, azimuth;  // Measurement of range and azimuth
+  std::vector<ScalarType> zx, zy;          // Measurement in 2D
+  std::vector<ScalarType> range, azimuth;  // Measurement of range and azimuth
+
+  void Clear() {
+    zx.clear();
+    zy.clear();
+    range.clear();
+    azimuth.clear();
+  }
 };
 
-using RadarSimState =
-    SimState<std::vector<std::vector<ObjectState2D>>, RadarDataType>;
+// Holds the truth as trajectory positions and the sensor data measured in this
+// time frame
+using RadarSimState = SimState<std::vector<ObjectState2D>, RadarDataType>;
 
 class RadarSim : public SimBase {
  public:
   explicit RadarSim() = default;
-  ~RadarSim() override = default;
+  virtual ~RadarSim() noexcept = default;
 
   virtual void Init() override;
   virtual void StartSimulation() override;
@@ -30,10 +40,43 @@ class RadarSim : public SimBase {
   virtual void Stop() override;
   virtual void ChangeUpdateRate(double rate_in_ns) override;
 
-  virtual RadarSimState GetState() const = 0;
+  virtual RadarSimState GetState();
+  virtual bool IsRunning() const {
+    std::unique_lock<std::mutex> lock(mtx_indic_);
+    return start_;
+  }
+  virtual bool HasUpdate() const;
+
+  virtual void PushTrajectory(const Trajectory<ObjectState2D>& traj) {
+    std::unique_lock<std::mutex> lock(mtx_sim_);
+    trajectories_.push_back(traj);
+  }
+
+ protected:
+  virtual void RunImpl();
 
  private:
+  // config
   double update_rate_;
+
+  // Flags
+  bool start_ = false;       // Flag to indicate if the simulation is running
+  bool has_update_ = false;  // Flag to indicate if there is a new update
+
+  // Thread control variables
+  std::jthread sim_thread_;
+  std::condition_variable cv_start_;
+  mutable std::mutex mtx_indic_;  // Mutex indicators
+  mutable std::mutex mtx_sim_;    // Mutex for simulation data
+  mutable std::mutex mtx_state_;  // Mutex for state data
+
+  // Simulation data
+  std::vector<Trajectory<ObjectState2D>> trajectories_;
+  std::vector<ObjectPosition2D> cart_positions_, true_pos;
+  ObjectPosition2D radar_position_;
+  std::vector<ObjectState2D> rang_azimuth_states_;
+
+  RadarSimState curr_state_;
 };
 
 }  // namespace sim

@@ -1,5 +1,8 @@
 #include "app/trajectory_planer.h"
 
+#include "sensfus/types.h"
+#include "sensfus/sim/trajectory.h"
+
 namespace sensfus {
 namespace app {
 
@@ -46,6 +49,14 @@ void TrajectoryPlaner::OnUIRender() {
   ImGui::Text("Saved Trajectory Points: %d", (int)trajectory_.size());
   if (ImGui::Button("Clear")) {
     trajectory_.clear();
+  }
+
+  if (ImGui::Button("Load")) {
+    // Load the trajectory to the radar simulator
+    sensfus::sim::Trajectory<ObjectState2D> traj;
+
+    traj.FromLineVector(trajectory_);
+    radar_sim_->PushTrajectory(traj);
   }
 
   ImGui::End();

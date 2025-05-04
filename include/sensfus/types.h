@@ -8,7 +8,7 @@ namespace sensfus {
 // Basic Types
 // -------------------------------------------------------
 
-using ScalarType = float;
+using ScalarType = double;
 
 struct SensVec2D {
   ScalarType x;

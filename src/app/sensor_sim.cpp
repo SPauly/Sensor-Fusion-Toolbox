@@ -100,7 +100,8 @@ bool SensorSim::Init() {
 
   // Init the necessary layers
   layer_stack_.PushLayer<RadarPlot>();
-  layer_stack_.PushLayer<TrajectoryPlaner>();
+  radar_sim_ = std::make_shared<sim::RadarSim>();
+  layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(radar_sim_));
 
   return true;
 }

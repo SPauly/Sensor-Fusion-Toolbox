@@ -10,7 +10,9 @@
 
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 #include <imgui.h>
+#include <memory>
 
+#include "sensfus/sim/radar_sim.h"
 #include "app/radar_plot.h"
 #include "app/trajectory_planer.h"
 #include "app/utils/layerstack.h"
@@ -71,6 +73,8 @@ class SensorSim : public ApplicationBase {
   ImGuiStyle *style_ = nullptr;
 
   utils::LayerStack layer_stack_;
+
+  std::shared_ptr<sensfus::sim::RadarSim> radar_sim_;
 };
 
 }  // namespace app
