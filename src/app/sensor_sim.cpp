@@ -100,6 +100,7 @@ bool SensorSim::Init() {
 
   // Init the necessary layers
   layer_stack_.PushLayer<RadarPlot>();
+  layer_stack_.PushLayer<TrajectoryPlaner>();
 
   return true;
 }

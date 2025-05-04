@@ -12,6 +12,7 @@
 #include <imgui.h>
 
 #include "app/radar_plot.h"
+#include "app/trajectory_planer.h"
 #include "app/utils/layerstack.h"
 
 namespace sensfus {
