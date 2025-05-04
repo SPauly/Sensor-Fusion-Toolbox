@@ -9,8 +9,9 @@
 #endif
 
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
-#include "imgui.h"
+#include <imgui.h>
 
+#include "app/radar_plot.h"
 #include "app/utils/layerstack.h"
 
 namespace sensfus {

@@ -10,6 +10,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
+#include <implot.h>
 
 namespace sensfus {
 namespace app {
@@ -64,7 +65,7 @@ bool SensorSim::Init() {
 
   // Create window with graphics context
   window_ =
-      glfwCreateWindow(display_w_, display_h_, "ViscoCorrect", NULL, NULL);
+      glfwCreateWindow(display_w_, display_h_, "Sensor Simulator", NULL, NULL);
   if (window_ == NULL) return false;
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1);  // Enable vsync
@@ -92,14 +93,21 @@ bool SensorSim::Init() {
 
   // End ImGui Window Init
 
+  // Setup the ImPlot context
+  ImPlot::CreateContext();
+
   viewport_ = ImGui::GetMainViewport();
 
-  // Init the necesary layers here
+  // Init the necessary layers
+  layer_stack_.PushLayer<RadarPlot>();
 
   return true;
 }
 
 void SensorSim::Shutdown() {
+  // Destroy the ImPlot context
+  ImPlot::DestroyContext();
+
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -112,7 +120,11 @@ void SensorSim::Shutdown() {
 bool SensorSim::Render() {
   if (glfwWindowShouldClose(window_)) return false;
 
-  glfwWaitEvents();
+  glfwPollEvents();
+  if (glfwGetWindowAttrib(window_, GLFW_ICONIFIED) != 0) {
+    ImGui_ImplGlfw_Sleep(10);
+    return true;
+  }
 
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -126,6 +138,7 @@ bool SensorSim::Render() {
   }
 
   ImGui::ShowDemoWindow();
+  ImPlot::ShowDemoWindow();
 
   MenuBar();
 

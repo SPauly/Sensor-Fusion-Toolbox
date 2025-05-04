@@ -10,16 +10,17 @@ namespace utils {
 /// layers
 class Layer {
  public:
+  explicit constexpr Layer() = default;
   virtual ~Layer() = default;
 
   /// @brief Called when the layer is attached to the application.
-  virtual void OnAttach() {};
+  virtual void OnAttach() = 0;
 
   /// @brief Called when the layer is detached from the application.
-  virtual void OnDetach() {};
+  virtual void OnDetach() = 0;
 
   /// @brief Called every frame to update the layer.
-  virtual void OnUIRender() {};
+  virtual void OnUIRender() = 0;
 };
 
 }  // namespace utils

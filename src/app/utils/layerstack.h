@@ -14,7 +14,7 @@ namespace utils {
 /// @details This class provides a stack of layers that can be pushed and popped
 class LayerStack {
  public:
-  LayerStack() = default;
+  explicit LayerStack() = default;
   ~LayerStack();
 
   template <typename T>

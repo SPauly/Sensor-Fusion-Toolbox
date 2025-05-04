@@ -37,6 +37,7 @@ include(cmake/target_imgui_implot_glfw.cmake)
 set(SENSOR_SIM_TARGETS
   src/app/entry_point.cpp
   src/app/sensor_sim.cpp
+  src/app/radar_plot.cpp
   src/app/utils/layerstack.cpp
 )
 
