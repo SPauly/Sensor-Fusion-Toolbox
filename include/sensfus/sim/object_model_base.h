@@ -17,10 +17,10 @@ namespace sim {
 template <typename ObjectStateType = ObjectState2D>
 class ObjectModelBase {
  public:
-  // Ensure ObjectType is either ObjectState2D or ObjectState3D
-  static_assert(std::is_same<ObjectType, ObjectState2D>::value ||
-                    std::is_same<ObjectType, ObjectState3D>::value,
-                "ObjectType must be ObjectState2D or ObjectState3D");
+  // Ensure ObjectStateType is either ObjectState2D or ObjectState3D
+  static_assert(std::is_same<ObjectStateType, ObjectState2D>::value ||
+                    std::is_same<ObjectStateType, ObjectState3D>::value,
+                "ObjectStateType must be ObjectState2D or ObjectState3D");
 
   explicit ObjectModelBase(std::shared_ptr<std::vector<ObjectStateType>> states)
       : states_(states) {}
@@ -32,7 +32,7 @@ class ObjectModelBase {
   /// match the physics model.
   /// @param time_between_points_ns Time between points in nanoseconds.
   virtual void ApplyToTrajectory(
-      const double time_between_points_ns = time_between_points_ns_) = 0;
+      const double time_between_points_ns = 50000.0) = 0;
 
   /// @brief Sets the time that passes between each point in the trajectory.
   /// @param time_between_points_ns time in nanoseconds.
@@ -40,7 +40,7 @@ class ObjectModelBase {
     time_between_points_ns_ = time_between_points_ns;
   }
 
- private:
+ protected:
   double time_between_points_ns_ = 50000.0;  // Time between points in ns
   std::shared_ptr<std::vector<ObjectStateType>> states_ = nullptr;
 };
@@ -48,16 +48,17 @@ class ObjectModelBase {
 /// @brief Applies a constant velocity model to the trajectory. This model
 /// assumes constant velocity between to points without a change in
 /// acceleration.
-/// @tparam ObjectType 2D or 3D object state.
-template <typename ObjectType = ObjectState2D>
-class BasicVelocityModel : public ObjectModelBase<ObjectType> {
+/// @tparam ObjectStateType 2D or 3D object state.
+template <typename ObjectStateType = ObjectState2D>
+class BasicVelocityModel : public ObjectModelBase<ObjectStateType> {
  public:
-  explicit BasicVelocityModel(std::shared_ptr<std::vector<ObjectType>> states)
-      : ObjectModelBase<ObjectType>(states) {}
+  explicit BasicVelocityModel(
+      std::shared_ptr<std::vector<ObjectStateType>> states)
+      : ObjectModelBase<ObjectStateType>(states) {}
   ~BasicVelocityModel() override = default;
 
   void ApplyToTrajectory(
-      const double time_between_points_ns = time_between_points_ns_) override {
+      const double time_between_points_ns = 50000.0) override {
     /// TODO: Implement the basic velocity model
     return;
   }

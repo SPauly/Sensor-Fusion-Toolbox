@@ -41,9 +41,9 @@ class Trajectory {
   /// @brief Initializes the trajectory with a vector of states.
   /// @param points precomputed trajectory states.
   explicit Trajectory(
-      const std::vector<ObjectType>& states,
+      const std::vector<ObjectType>& points,
       const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : Tragectory(type), points_(points) {}
+      : Trajectory(type), points_(points) {}
   /// @brief Creates a trajectory based on the given points using the underlying
   /// physics model for the target. (This will decide velocity and acceleration
   /// during each point transition.)
@@ -61,8 +61,8 @@ class Trajectory {
   /// during each point transition.)
   /// @param line_vector Vector of 2D or 3D points representing the trajectory.
   void FromLineVector(const std::vector<RawPosType>& line_vector) {
-    points_.clear();
-    points_.reserve(line_vector.size());
+    points_->clear();
+    points_->reserve(line_vector.size());
     for (const auto& point : line_vector) {
       ObjectType state;
       if constexpr (kDim == 2) {
@@ -70,25 +70,25 @@ class Trajectory {
       } else if constexpr (kDim == 3) {
         state.head<3>() = ObjectPosition3D(point.x, point.y, point.z);
       }
-      points_.emplace_back(state);
+      points_->emplace_back(state);
     }
     object_model_->ApplyToTrajectory();
   }
 
   /// @brief Returns the object state at the given index.
   /// @param index Timestep index of the object state.
-  /// @return ObjectState at the given index. When index is out of bounds, it
+  /// @return ObjectType at the given index. When index is out of bounds, it
   /// returns the last valid state.
-  const ObjectState& GetState(unsigned long long index) const {
-    if (index >= points_.size()) {
-      index = points_.size() - 1;
+  const ObjectType& GetState(unsigned long long index) const {
+    if (index >= points_->size()) {
+      index = points_->size() - 1;
     }
-    return points_[index];
+    return (*points_)[index];
   }
 
   /// @brief Returns the object state at the given index.
   /// @return Tragectory size
-  inline const unsigned long long GetSize() const { return points_.size(); }
+  inline const unsigned long long GetSize() const { return points_->size(); }
 
   inline void SetObjectModel(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
@@ -96,7 +96,7 @@ class Trajectory {
   }
 
  private:
-  std::vector<ObjectState> points_;
+  std::shared_ptr<std::vector<ObjectType>> points_;
 
   std::shared_ptr<ObjectModelBase<ObjectType>> object_model_ = nullptr;
 };
