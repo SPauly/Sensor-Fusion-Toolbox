@@ -13,31 +13,31 @@ void TrajectoryPlaner::OnUIRender() {
   if (ImPlot::BeginPlot("Plot Target Tragectory")) {
     ImPlotPoint mouse = ImPlot::GetPlotMousePos();
 
-    // Handle left mouse button input inside plot
-    if (ImPlot::IsPlotHovered()) {
-      if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        trajectory_.clear();
-        trajectory_.push_back(ImVec2((float)mouse.x, (float)mouse.y));
-        drawing_ = true;
-      } else if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && drawing_) {
-        // Only add if the point is different from the last
-        ImVec2 last = trajectory_.back();
-        if (last.x != (float)mouse.x || last.y != (float)mouse.y) {
-          trajectory_.push_back(ImVec2((float)mouse.x, (float)mouse.y));
-        }
-      } else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && drawing_) {
-        drawing_ = false;
-      }
+    // Add a point on each left mouse click inside the plot
+    if (ImPlot::IsPlotHovered() &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+      trajectory_.emplace_back((float)mouse.x, (float)mouse.y);
     }
 
-    // Draw the trajectory as lines
-    if (!trajectory_.empty()) {
+    // Draw the trajectory as lines between points
+    if (trajectory_.size() >= 2) {
       std::vector<float> xs, ys;
       for (const auto& pt : trajectory_) {
         xs.push_back(pt.x);
         ys.push_back(pt.y);
       }
       ImPlot::PlotLine("Trajectory", xs.data(), ys.data(), (int)xs.size());
+    }
+
+    // Draw the points themselves
+    if (!trajectory_.empty()) {
+      std::vector<float> xs, ys;
+      for (const auto& pt : trajectory_) {
+        xs.push_back(pt.x);
+        ys.push_back(pt.y);
+      }
+      ImPlot::PlotScatter("Trajectory Points", xs.data(), ys.data(),
+                          (int)xs.size());
     }
 
     ImPlot::EndPlot();
