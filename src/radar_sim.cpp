@@ -21,10 +21,11 @@ void RadarSim::Init() {
       cv_start_.wait(lock, [this] { return start_; });
 
       while (!should_stop_) {
-        utils::RateTimer timer(std::chrono::seconds(5));
+        utils::RateTimer timer(
+            std::chrono::nanoseconds(static_cast<long long>(update_rate_)));
         RunImpl();
         lock.unlock();
-        timer.WaitRemaining();
+        timer.WaitRemaining();  // Wait for the next update
         lock.lock();
       }
     }
@@ -77,16 +78,23 @@ void RadarSim::RunImpl() {
   curr_state_.sensor.Clear();
 
   // Update the simulation data for all the trajectories
-  for (auto& trajectory : trajectories_) {
-    // Update the true trajectory position
-    true_pos.push_back(trajectory.GetState(curr_index_).head<2>());
+  for (int i = 0; i < trajectories_.size(); i++) {
+    // Update the true trajectory position -> account for the offset that the
+    // trajectory was added to a running simulation
+    true_pos.push_back(trajectories_.at(i)
+                           .GetState(curr_index_ - traj_index_offset_.at(i))
+                           .head<2>());
 
     // Update the cartesian position
-    cart_positions_.push_back(trajectory.GetState(curr_index_).head<2>());
+    cart_positions_.push_back(
+        trajectories_.at(i)
+            .GetState(curr_index_ - traj_index_offset_.at(i))
+            .head<2>());
     // update the rang and azimuth states
 
     // Create the current state data
-    curr_state_.truth.push_back(trajectory.GetState(curr_index_));
+    curr_state_.truth.push_back(
+        trajectories_.at(i).GetState(curr_index_ - traj_index_offset_.at(i)));
   }
 
   curr_index_++;

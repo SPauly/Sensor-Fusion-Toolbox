@@ -224,6 +224,17 @@ void SensorSim::MenuBar() {
 
 void SensorSim::SensorControl() {
   if (ImGui::Begin("Sensor Control")) {
+    ImGui::Text("Sensor Control Window");
+    static float update_time_ms = 100.0f;  // Default 100 ms
+    ImGui::SliderFloat("Update Time (ms)", &update_time_ms, 1.0f, 10000.0f,
+                       "%.1f ms", ImGuiSliderFlags_Logarithmic);
+    radar_sim_->at(radar_id_)->SetUpdateRate(
+        static_cast<uint64_t>(update_time_ms * 1e6));
+    HelpMarker(
+        "Controls how often the radar simulation updates. Lower values mean "
+        "faster updates.",
+        "(?)");
+
     // Radar Sensor will always be enabled:
     RadarControl(radar_id_);
 
@@ -233,7 +244,22 @@ void SensorSim::SensorControl() {
   }
 }
 
-void SensorSim::RadarControl(int id) {}
+void SensorSim::RadarControl(int id) {
+  ImGui::Text("Radar %d", id);
+  ImGui::SameLine();
+  if (ImGui::Button("Start")) {
+    radar_sim_->at(id)->StartSimulation();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Stop")) {
+    radar_sim_->at(id)->Stop();
+  }
+
+  // Display the current status of the sensor
+  ImGui::Separator();
+  ImGui::Text("Sensor Status: %s",
+              (radar_sim_->at(id)->IsRunning()) ? "Running" : "Stopped");
+}
 
 void SensorSim::HelpMarker(const char *description, const char *marker) {
   ImGui::TextDisabled((marker) ? marker : "(?)");

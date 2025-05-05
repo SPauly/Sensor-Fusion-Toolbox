@@ -50,6 +50,18 @@ class RadarSim : public SimBase {
   virtual void PushTrajectory(const Trajectory<ObjectState2D>& traj) {
     std::unique_lock<std::mutex> lock(mtx_);
     trajectories_.push_back(traj);
+
+    // store the index offset of the trajectory
+    traj_index_offset_.push_back(curr_index_);
+  }
+
+  virtual void SetUpdateRate(double rate) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    update_rate_ = rate;
+  }
+  virtual void SetSensorPosition(const ObjectPosition2D& pos) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    radar_position_ = pos;
   }
 
   /// @brief Returns the current Simulation step
@@ -86,6 +98,7 @@ class RadarSim : public SimBase {
 
   // Simulation data
   std::vector<Trajectory<ObjectState2D>> trajectories_;
+  std::vector<unsigned long long> traj_index_offset_;
   std::vector<ObjectPosition2D> cart_positions_, true_pos;
   ObjectPosition2D radar_position_;
   std::vector<ObjectState2D> rang_azimuth_states_;
