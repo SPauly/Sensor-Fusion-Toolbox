@@ -35,6 +35,9 @@ class SensorSim : public ApplicationBase {
 
  private:
   void MenuBar();
+  void SensorControl();
+
+  void RadarControl(int id);
 
   void ConfigWindow();
   void SetStyle();
@@ -74,7 +77,7 @@ class SensorSim : public ApplicationBase {
 
   utils::LayerStack layer_stack_;
 
-  std::shared_ptr<sensfus::sim::RadarSim> radar_sim_;
+  std::shared_ptr<sim::RadarSim> radar_sim_;
 };
 
 }  // namespace app

@@ -151,6 +151,7 @@ bool SensorSim::Render() {
   ImPlot::ShowDemoWindow();
 
   MenuBar();
+  SensorControl();
 
   // Rendering
   ImGui::Render();
@@ -214,6 +215,17 @@ void SensorSim::MenuBar() {
     ImGui::EndMainMenuBar();
   }
 }
+
+void SensorSim::SensorControl() {
+  if (ImGui::Begin("Sensor Control")) {
+    // show standard one sensor:
+    RadarControl(0);
+
+    ImGui::End();
+  }
+}
+
+void SensorSim::RadarControl(int id) {}
 
 void SensorSim::HelpMarker(const char *description, const char *marker) {
   ImGui::TextDisabled((marker) ? marker : "(?)");
