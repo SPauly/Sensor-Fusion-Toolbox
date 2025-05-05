@@ -52,9 +52,15 @@ class RadarSim : public SimBase {
     trajectories_.push_back(traj);
   }
 
-  virtual size_t GetTrajectorySize() const {
+  /// @brief Returns the current Simulation step
+  /// @return Step of the simulation.
+  virtual unsigned long long GetStepIndex() const {
     std::unique_lock<std::mutex> lock(mtx_);
+    return curr_index_;
+  }
 
+  virtual const size_t GetTrajectoryCount() const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return trajectories_.size();
   }
 
@@ -62,6 +68,7 @@ class RadarSim : public SimBase {
   virtual void RunImpl();
 
  private:
+  /// TODO: Implement different update rate of model and sensor data
   // config
   double update_rate_;
 

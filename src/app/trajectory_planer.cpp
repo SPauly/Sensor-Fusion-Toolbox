@@ -54,7 +54,11 @@ void TrajectoryPlaner::OnUIRender() {
 
   if (ImGui::Button("Load")) {
     traj_.FromLineVector(trajectory_);
-    radar_sim_->PushTrajectory(traj_);
+
+    // Send trajectory to all registered Sensors
+    for (auto& sim : *radar_sim_) {
+      sim->PushTrajectory(traj_);
+    }
   }
 
   ImGui::End();

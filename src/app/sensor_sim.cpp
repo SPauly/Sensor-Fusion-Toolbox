@@ -99,7 +99,9 @@ bool SensorSim::Init() {
   viewport_ = ImGui::GetMainViewport();
 
   // Init the necessary layers
-  radar_sim_ = std::make_shared<sim::RadarSim>();
+  radar_sim_ = std::make_shared<std::vector<std::shared_ptr<sim::RadarSim>>>();
+  radar_sim_->push_back(std::make_shared<sim::RadarSim>());
+  radar_sim_->at(0)->Init();
   layer_stack_.PushLayer(std::make_shared<RadarPlot>(radar_sim_));
   layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(radar_sim_));
 
@@ -112,7 +114,11 @@ void SensorSim::Shutdown() {
     layer->OnDetach();
   }
 
-  radar_sim_->Stop();
+  for (auto &radar : *radar_sim_) {
+    /// TODO: This will take too long since all the wait times of the simulator
+    /// iterations will accumulate. Fix it by creating immidiate stop
+    radar->Stop();
+  }
   layer_stack_.clear();
 
   // Destroy the ImPlot context
@@ -218,8 +224,10 @@ void SensorSim::MenuBar() {
 
 void SensorSim::SensorControl() {
   if (ImGui::Begin("Sensor Control")) {
-    // show standard one sensor:
-    RadarControl(0);
+    // Radar Sensor will always be enabled:
+    RadarControl(radar_id_);
+
+    /// TODO: Add Popup to create new sensors
 
     ImGui::End();
   }

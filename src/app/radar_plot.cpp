@@ -3,39 +3,43 @@
 namespace sensfus {
 namespace app {
 
-void RadarPlot::OnAttach() { radar_sim_->Init(); }
+void RadarPlot::OnAttach() {}
 
 void RadarPlot::OnUIRender() {
   ImGui::Begin("Radar Plot");
 
   static bool sim_running = false;
 
-  // Start simulation on button press
-  if (ImGui::Button("Start Radar Simulation")) {
-    if (!sim_running) {
-      sim_running = true;
-      radar_sim_->StartSimulation();
-    }
+  // Display the iteration step of each sensor
+  for (int i = 0; i < radar_sim_->size(); i++) {
+    ImGui::Text("Iteration Step of Sensor: %d -> %d", i,
+                radar_sim_->at(i)->GetStepIndex());
   }
 
-  ImGui::Text("Trajectories: %d", (int)radar_sim_->GetTrajectorySize());
-  ImGui::Text("State data: %d", (int)state_.truth.size());
+  if (ImPlot::BeginPlot("Radar Data")) {
+    // Display the Truth only once
+    if (radar_sim_->at(0)->HasUpdate()) {
+      state_[0] = radar_sim_->at(0)->GetState();
 
-  if (ImPlot::BeginPlot("Radar Frame")) {
-    // Display the latest frame if available
-    if (radar_sim_->HasUpdate()) {
-      ImGui::Text("Has Update");
-      state_ = radar_sim_->GetState();
+      // check if that we have enough room for trajectoris
+      x_truth.resize(radar_sim_->at(0)->GetTrajectoryCount());
+      y_truth.resize(radar_sim_->at(0)->GetTrajectoryCount());
 
-      for (const auto& obj : state_.truth) {
-        x_truth.push_back(obj(0));
-        y_truth.push_back(obj(1));
+      // safe the x and y attributes for each trajectory
+      for (int i = 0; i < state_[0].truth.size(); i++) {
+        x_truth[i].push_back(state_[0].truth[i](0));
+        y_truth[i].push_back(state_[0].truth[i](1));
       }
     }
 
-    if (!x_truth.empty())
-      ImPlot::PlotScatter("Truth", x_truth.data(), y_truth.data(),
-                          (int)x_truth.size());
+    /// TODO: Update all the sensor data
+
+    // Display the truth
+    if (!x_truth.empty()) {
+      DisplayTargets();
+    }
+
+    /// TODO: Plot all the sensor data
 
     ImPlot::EndPlot();
   }
@@ -43,7 +47,19 @@ void RadarPlot::OnUIRender() {
   ImGui::End();
 }
 
-void RadarPlot::OnDetach() {}
+void RadarPlot::OnDetach() {
+  x_truth.clear();
+  y_truth.clear();
+}
+
+void RadarPlot::DisplayTargets() {
+  /// TODO: create a plot with different sign for each data point
+  for (int i = 0; i < x_truth.size(); i++) {
+    const char *label = ("Target" + (char)(i + 65));
+    ImPlot::PlotScatter(label, x_truth.at(i).data(), y_truth.at(i).data(),
+                        (int)x_truth.at(i).size());
+  }
+}
 
 }  // namespace app
 

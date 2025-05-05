@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <implot.h>
 #include <memory>
+#include <vector>
 
 #include "sensfus/sim/radar_sim.h"
 #include "app/utils/layer.h"
@@ -12,13 +13,21 @@ namespace sensfus {
 namespace app {
 class RadarPlot : public utils::Layer {
  public:
-  explicit RadarPlot(std::shared_ptr<sim::RadarSim> radar_sim)
-      : Layer(), plot_flags_(0), axis_flags_(0), radar_sim_(radar_sim) {}
+  explicit RadarPlot(
+      std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim)
+      : Layer(), plot_flags_(0), axis_flags_(0), radar_sim_(radar_sim) {
+    state_.resize(radar_sim->size());
+    x_truth.resize(1);
+    y_truth.resize(1);
+  }
   virtual ~RadarPlot() = default;
 
   virtual void OnAttach() override;
   virtual void OnUIRender() override;
   virtual void OnDetach() override;
+
+ protected:
+  virtual void DisplayTargets();
 
  private:
   // Style
@@ -26,10 +35,13 @@ class RadarPlot : public utils::Layer {
   ImPlotFlags plot_flags_;
   ImPlotAxisFlags axis_flags_;
 
-  std::shared_ptr<sim::RadarSim> radar_sim_;
-  sim::RadarSimState state_;
+  // one radar sim per sensor
+  std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim_;
+  // one state per sensor
+  std::vector<sim::RadarSimState> state_;
 
-  std::vector<double> x_truth, y_truth;
+  /// Holds one vector per trajectory, with all the x,y values
+  std::vector<std::vector<double>> x_truth, y_truth;
 };
 
 }  // namespace app
