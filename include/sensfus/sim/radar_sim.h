@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <utility>  // std::pair
 
 #include "sensfus/types.h"
 #include "sensfus/sim/sim_base.h"
@@ -27,7 +28,8 @@ struct RadarDataType {
 
 // Holds the truth as trajectory positions and the sensor data measured in this
 // time frame
-using RadarSimState = SimState<std::vector<ObjectState2D>, RadarDataType>;
+using RadarSimState =
+    SimState<std::vector<std::pair<size_t, ObjectState2D>>, RadarDataType>;
 
 class RadarSim : public SimBase {
  public:
@@ -88,7 +90,8 @@ class RadarSim : public SimBase {
   bool start_ = false;       // Flag to indicate if the simulation is running
   bool has_update_ = false;  // Flag to indicate if there is a new update
   bool should_stop_ = false;
-
+  bool rec_update_ =
+      false;  // Flag to indicate if the simulation received data during update
   unsigned long long curr_index_ = 0;  // Current index of the trajectory
 
   // Thread control variables

@@ -26,9 +26,9 @@ void RadarPlot::OnUIRender() {
       y_truth.resize(radar_sim_->at(0)->GetTrajectoryCount());
 
       // safe the x and y attributes for each trajectory
-      for (int i = 0; i < state_[0].truth.size(); i++) {
-        x_truth[i].push_back(state_[0].truth[i](0));
-        y_truth[i].push_back(state_[0].truth[i](1));
+      for (auto &pair : state_[0].truth) {
+        x_truth[pair.first].push_back(pair.second(0));
+        y_truth[pair.first].push_back(pair.second(1));
       }
     }
 
@@ -55,9 +55,10 @@ void RadarPlot::OnDetach() {
 void RadarPlot::DisplayTargets() {
   /// TODO: create a plot with different sign for each data point
   for (int i = 0; i < x_truth.size(); i++) {
-    const char *label = ("Target" + (char)(i + 65));
-    ImPlot::PlotScatter(label, x_truth.at(i).data(), y_truth.at(i).data(),
-                        (int)x_truth.at(i).size());
+    std::string label = "Target";
+    label += static_cast<char>(i + 65);
+    ImPlot::PlotScatter(label.c_str(), x_truth.at(i).data(),
+                        y_truth.at(i).data(), (int)x_truth.at(i).size());
   }
 }
 
