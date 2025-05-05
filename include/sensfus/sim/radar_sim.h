@@ -42,13 +42,13 @@ class RadarSim : public SimBase {
 
   virtual RadarSimState GetState();
   virtual bool IsRunning() const {
-    std::unique_lock<std::mutex> lock(mtx_indic_);
+    std::unique_lock<std::mutex> lock(mtx_);
     return start_;
   }
   virtual bool HasUpdate() const;
 
   virtual void PushTrajectory(const Trajectory<ObjectState2D>& traj) {
-    std::unique_lock<std::mutex> lock(mtx_sim_);
+    std::unique_lock<std::mutex> lock(mtx_);
     trajectories_.push_back(traj);
   }
 
@@ -62,13 +62,12 @@ class RadarSim : public SimBase {
   // Flags
   bool start_ = false;       // Flag to indicate if the simulation is running
   bool has_update_ = false;  // Flag to indicate if there is a new update
+  bool should_stop_ = false;
 
   // Thread control variables
   std::jthread sim_thread_;
   std::condition_variable cv_start_;
-  mutable std::mutex mtx_indic_;  // Mutex indicators
-  mutable std::mutex mtx_sim_;    // Mutex for simulation data
-  mutable std::mutex mtx_state_;  // Mutex for state data
+  mutable std::mutex mtx_;
 
   // Simulation data
   std::vector<Trajectory<ObjectState2D>> trajectories_;
