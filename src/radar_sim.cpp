@@ -19,7 +19,6 @@ void RadarSim::Init() {
     while (!stoken.stop_requested()) {
       std::unique_lock<std::mutex> lock(mtx_);
       cv_start_.wait(lock, [this] { return start_; });
-      std::cout << "Running impl now" << std::endl;
 
       while (!should_stop_) {
         utils::RateTimer timer(std::chrono::seconds(5));
@@ -73,8 +72,6 @@ bool RadarSim::HasUpdate() const {
 }
 
 void RadarSim::RunImpl() {
-  std::cout << "in impp" << std::endl;
-
   // update the current state
   curr_state_.truth.clear();
   curr_state_.sensor.Clear();
@@ -82,17 +79,17 @@ void RadarSim::RunImpl() {
   // Update the simulation data for all the trajectories
   for (auto& trajectory : trajectories_) {
     // Update the true trajectory position
-    true_pos.push_back(trajectory.GetState(cart_positions_.size()).head<2>());
+    true_pos.push_back(trajectory.GetState(curr_index_).head<2>());
 
     // Update the cartesian position
-    cart_positions_.push_back(
-        trajectory.GetState(cart_positions_.size()).head<2>());
+    cart_positions_.push_back(trajectory.GetState(curr_index_).head<2>());
     // update the rang and azimuth states
 
     // Create the current state data
-    curr_state_.truth.push_back(trajectory.GetState(cart_positions_.size()));
+    curr_state_.truth.push_back(trajectory.GetState(curr_index_));
   }
 
+  curr_index_++;
   has_update_ = true;
 }
 

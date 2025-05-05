@@ -3,7 +3,7 @@
 namespace sensfus {
 namespace app {
 
-void RadarPlot::OnAttach() {}
+void RadarPlot::OnAttach() { radar_sim_->Init(); }
 
 void RadarPlot::OnUIRender() {
   ImGui::Begin("Radar Plot");
@@ -12,9 +12,10 @@ void RadarPlot::OnUIRender() {
 
   // Start simulation on button press
   if (ImGui::Button("Start Radar Simulation")) {
-    sim_running = true;
-    radar_sim_->Init();
-    radar_sim_->StartSimulation();
+    if (!sim_running) {
+      sim_running = true;
+      radar_sim_->StartSimulation();
+    }
   }
 
   ImGui::Text("Trajectories: %d", (int)radar_sim_->GetTrajectorySize());

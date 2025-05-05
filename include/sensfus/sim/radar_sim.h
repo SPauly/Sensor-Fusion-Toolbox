@@ -70,6 +70,8 @@ class RadarSim : public SimBase {
   bool has_update_ = false;  // Flag to indicate if there is a new update
   bool should_stop_ = false;
 
+  unsigned long long curr_index_ = 0;  // Current index of the trajectory
+
   // Thread control variables
   std::jthread sim_thread_;
   std::condition_variable cv_start_;
