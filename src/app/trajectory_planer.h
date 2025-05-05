@@ -34,6 +34,7 @@ class TrajectoryPlaner : public utils::Layer {
 
   // Simulation data
   std::shared_ptr<sim::RadarSim> radar_sim_;
+  sensfus::sim::Trajectory<ObjectState2D> traj_;
 };
 
 }  // namespace app

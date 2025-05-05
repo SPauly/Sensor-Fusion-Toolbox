@@ -35,7 +35,7 @@ void RadarSim::Init() {
 void RadarSim::StartSimulation() {
   std::unique_lock<std::mutex> lock(mtx_);
   start_ = true;
-  cv_start_.notify_one();
+  cv_start_.notify_all();
   std::cout << "Starting Simulation" << std::endl;
 }
 
@@ -81,6 +81,8 @@ void RadarSim::RunImpl() {
     true_pos.push_back(trajectory.GetState(cart_positions_.size()).head<2>());
 
     // Update the cartesian position
+    cart_positions_.push_back(
+        trajectory.GetState(cart_positions_.size()).head<2>());
     // update the rang and azimuth states
 
     // Create the current state data

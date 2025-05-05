@@ -47,16 +47,14 @@ void TrajectoryPlaner::OnUIRender() {
   }
 
   ImGui::Text("Saved Trajectory Points: %d", (int)trajectory_.size());
+  ImGui::Text("Loaded Points: %d", (int)traj_.GetSize());
   if (ImGui::Button("Clear")) {
     trajectory_.clear();
   }
 
   if (ImGui::Button("Load")) {
-    // Load the trajectory to the radar simulator
-    sensfus::sim::Trajectory<ObjectState2D> traj;
-
-    traj.FromLineVector(trajectory_);
-    radar_sim_->PushTrajectory(traj);
+    traj_.FromLineVector(trajectory_);
+    radar_sim_->PushTrajectory(traj_);
   }
 
   ImGui::End();

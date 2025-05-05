@@ -27,6 +27,7 @@ class RadarPlot : public utils::Layer {
   ImPlotAxisFlags axis_flags_;
 
   std::shared_ptr<sim::RadarSim> radar_sim_;
+  sim::RadarSimState state_;
 
   std::vector<double> x_truth, y_truth;
 };

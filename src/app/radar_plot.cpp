@@ -17,19 +17,25 @@ void RadarPlot::OnUIRender() {
     radar_sim_->StartSimulation();
   }
 
+  ImGui::Text("Trajectories: %d", (int)radar_sim_->GetTrajectorySize());
+  ImGui::Text("State data: %d", (int)state_.truth.size());
+
   if (ImPlot::BeginPlot("Radar Frame")) {
     // Display the latest frame if available
     if (radar_sim_->HasUpdate()) {
-      sim::RadarSimState state = radar_sim_->GetState();
+      ImGui::Text("Has Update");
+      state_ = radar_sim_->GetState();
 
-      for (const auto& obj : state.truth) {
+      for (const auto& obj : state_.truth) {
         x_truth.push_back(obj(0));
         y_truth.push_back(obj(1));
       }
-      if (!x_truth.empty())
-        ImPlot::PlotScatter("Truth", x_truth.data(), y_truth.data(),
-                            (int)x_truth.size());
     }
+
+    if (!x_truth.empty())
+      ImPlot::PlotScatter("Truth", x_truth.data(), y_truth.data(),
+                          (int)x_truth.size());
+
     ImPlot::EndPlot();
   }
 

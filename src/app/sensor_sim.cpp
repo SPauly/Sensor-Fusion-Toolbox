@@ -107,6 +107,11 @@ bool SensorSim::Init() {
 }
 
 void SensorSim::Shutdown() {
+  // Shutdown layers
+  for (auto &layer : layer_stack_) {
+    layer->OnDetach();
+  }
+
   // Destroy the ImPlot context
   ImPlot::DestroyContext();
 

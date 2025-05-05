@@ -52,6 +52,12 @@ class RadarSim : public SimBase {
     trajectories_.push_back(traj);
   }
 
+  virtual size_t GetTrajectorySize() const {
+    std::unique_lock<std::mutex> lock(mtx_);
+
+    return trajectories_.size();
+  }
+
  protected:
   virtual void RunImpl();
 
