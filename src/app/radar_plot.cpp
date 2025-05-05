@@ -42,7 +42,7 @@ void RadarPlot::OnUIRender() {
   ImGui::End();
 }
 
-void RadarPlot::OnDetach() { radar_sim_->Stop(); }
+void RadarPlot::OnDetach() {}
 
 }  // namespace app
 

@@ -44,12 +44,16 @@ void RadarSim::HaltSimulation() {
 }
 
 void RadarSim::Stop() {
-  std::unique_lock<std::mutex> lock(mtx_);
-  start_ = false;
-  should_stop_ = true;
-  cv_start_.notify_one();
-  sim_thread_.request_stop();
-  sim_thread_.join();
+  {
+    std::unique_lock<std::mutex> lock(mtx_);
+    should_stop_ = true;
+    start_ = true;  // Ensure the thread wakes up if waiting
+    cv_start_.notify_all();
+  }
+  if (sim_thread_.joinable()) {
+    sim_thread_.request_stop();
+    sim_thread_.join();
+  }
 }
 
 void RadarSim::ChangeUpdateRate(double rate_in_ns) {

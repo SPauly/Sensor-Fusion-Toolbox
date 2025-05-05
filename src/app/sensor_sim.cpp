@@ -112,6 +112,9 @@ void SensorSim::Shutdown() {
     layer->OnDetach();
   }
 
+  radar_sim_->Stop();
+  layer_stack_.clear();
+
   // Destroy the ImPlot context
   ImPlot::DestroyContext();
 
