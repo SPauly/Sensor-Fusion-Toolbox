@@ -53,6 +53,8 @@ void RadarSim::Stop() {
   if (sim_thread_.joinable()) {
     sim_thread_.request_stop();
     sim_thread_.join();
+
+    start_ = false;  // Reset the start flag
   }
 }
 

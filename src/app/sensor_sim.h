@@ -42,6 +42,8 @@ class SensorSim : public ApplicationBase {
   /// @param id id of the radarsim to handle
   void RadarControl(int id);
 
+  void AddSensor();
+
   void ConfigWindow();
   void SetStyle();
   void DarkMode();
@@ -52,8 +54,9 @@ class SensorSim : public ApplicationBase {
  private:
   // config
   bool use_open_workspace = false;
-  bool show_graph_ = false;
+  bool hide_simulation_ = false;
   bool use_dark_mode = false;
+  bool adding_sensor_ = false;
 
   // internal use
   GLFWwindow *window_;
@@ -62,9 +65,8 @@ class SensorSim : public ApplicationBase {
   bool submitting_feedback_ = false;
 
   // Appearence
-  const int display_w_ = 445;
-  const int display_h_ = 650;
-  const int display_w_offset_graph_ = 445;
+  const int display_w_ = 1400;
+  const int display_h_ = 950;
   int temp_display_w_, temp_display_h_;  // for temporary use
   const ImGuiWindowFlags closed_workspace_flags_ = ImGuiWindowFlags_NoCollapse |
                                                    ImGuiWindowFlags_NoMove |

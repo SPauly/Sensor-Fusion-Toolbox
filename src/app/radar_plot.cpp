@@ -16,6 +16,8 @@ void RadarPlot::OnUIRender() {
                 radar_sim_->at(i)->GetStepIndex());
   }
 
+  ImPlot::SetNextAxesLimits(0, 10, 0, 10, ImGuiCond_Once);
+
   if (ImPlot::BeginPlot("Radar Data")) {
     // Display the Truth only once
     if (radar_sim_->at(0)->HasUpdate()) {

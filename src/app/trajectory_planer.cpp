@@ -9,7 +9,7 @@ namespace app {
 void TrajectoryPlaner::OnAttach() {}
 
 void TrajectoryPlaner::OnUIRender() {
-  ImGui::Begin("Tragectory Planer");
+  ImGui::Begin("Tragectory Planer", nullptr, window_flags_);
 
   ImPlot::SetNextAxesLimits(0, 10, 0, 10, ImGuiCond_Once);
 
