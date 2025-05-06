@@ -26,6 +26,10 @@ class RadarPlot : public utils::Layer {
   virtual void OnUIRender() override;
   virtual void OnDetach() override;
 
+  /// @brief Interface that provides the imgui control of each radar sim
+  /// @param id id of the sensor to control
+  void RunRadarControl(int id);
+
  protected:
   virtual void DisplayTargets();
 
@@ -42,6 +46,11 @@ class RadarPlot : public utils::Layer {
 
   /// Holds one vector per trajectory, with all the x,y values
   std::vector<std::vector<double>> x_truth, y_truth;
+
+  // Control variables for gui
+  std::vector<float> stddev_cartesian_, stddev_range_,
+      stddev_azimuth_;  // Standard deviation of the sensor measurements
+  std::vector<float> pos_x_, pos_y_, pos_z_;  // Position of the sensor
 };
 
 }  // namespace app

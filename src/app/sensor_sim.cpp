@@ -110,7 +110,8 @@ bool SensorSim::Init() {
   radar_sim_ = std::make_shared<std::vector<std::shared_ptr<sim::RadarSim>>>();
   radar_sim_->push_back(std::make_shared<sim::RadarSim>());
   radar_sim_->at(0)->Init();
-  layer_stack_.PushLayer(std::make_shared<RadarPlot>(radar_sim_));
+  radar_plot_ = std::make_shared<RadarPlot>(radar_sim_);
+  layer_stack_.PushLayer(radar_plot_);
   layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(radar_sim_));
 
   return true;
@@ -236,29 +237,10 @@ void SensorSim::SensorControl() {
 
     ImGui::Separator();
 
-    for (int i = 0; i <= radar_id_; i++) RadarControl(i);
+    for (int i = 0; i <= radar_id_; i++) radar_plot_->RunRadarControl(i);
 
     ImGui::End();
   }
-}
-
-void SensorSim::RadarControl(int id) {
-  ImGui::Text("Radar %d", id);
-  ImGui::SameLine();
-  std::string start_label = "Start##" + std::to_string(id);
-  if (ImGui::Button(start_label.c_str())) {
-    radar_sim_->at(id)->StartSimulation();
-  }
-  ImGui::SameLine();
-  std::string stop_label = "Stop##" + std::to_string(id);
-  if (ImGui::Button(stop_label.c_str())) {
-    radar_sim_->at(id)->Stop();
-  }
-
-  // Display the current status of the sensor
-  ImGui::Text("Sensor Status: %s",
-              (radar_sim_->at(id)->IsRunning()) ? "Running" : "Stopped");
-  ImGui::Separator();
 }
 
 void SensorSim::AddSensor() {

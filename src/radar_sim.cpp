@@ -12,7 +12,7 @@ void RadarSim::Init() {
   // Init all the simulation data to zero
   trajectories_.clear();
   cart_positions_.clear();
-  radar_position_ = ObjectPosition2D::Zero();
+  radar_position_ = SensVec2D{0.0, 0.0};
   rang_azimuth_states_.clear();
 
   sim_thread_ = std::jthread([this](std::stop_token stoken) {
@@ -56,11 +56,6 @@ void RadarSim::Stop() {
 
     start_ = false;  // Reset the start flag
   }
-}
-
-void RadarSim::ChangeUpdateRate(double rate_in_ns) {
-  std::unique_lock<std::mutex> lock(mtx_);
-  update_rate_ = rate_in_ns;
 }
 
 RadarSimState RadarSim::GetState() {

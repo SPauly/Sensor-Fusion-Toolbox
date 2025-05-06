@@ -37,11 +37,6 @@ class SensorSim : public ApplicationBase {
   void MenuBar();
   void SensorControl();
 
-  /// @brief Interface to handle the RadarSim specific variables. Must be called
-  /// within a valid ImGui Window
-  /// @param id id of the radarsim to handle
-  void RadarControl(int id);
-
   void AddSensor();
 
   void ConfigWindow();
@@ -83,6 +78,7 @@ class SensorSim : public ApplicationBase {
   utils::LayerStack layer_stack_;
 
   std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim_;
+  std::shared_ptr<RadarPlot> radar_plot_;
   int radar_id_ = 0;
 };
 

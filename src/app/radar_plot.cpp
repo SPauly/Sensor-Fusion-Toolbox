@@ -64,6 +64,76 @@ void RadarPlot::DisplayTargets() {
   }
 }
 
+void RadarPlot::RunRadarControl(int id) {
+  ImGui::Text("Radar %d", id);
+  ImGui::SameLine();
+  std::string start_label = "Start##" + std::to_string(id);
+  if (ImGui::Button(start_label.c_str())) {
+    radar_sim_->at(id)->StartSimulation();
+  }
+  ImGui::SameLine();
+  std::string stop_label = "Stop##" + std::to_string(id);
+  if (ImGui::Button(stop_label.c_str())) {
+    radar_sim_->at(id)->Stop();
+  }
+
+  // Display the current status of the sensor
+  ImGui::Text("Sensor Status: %s",
+              (radar_sim_->at(id)->IsRunning()) ? "Running" : "Stopped");
+
+  // Check that we have enough space for the noise parameters
+  if (stddev_cartesian_.size() <= id) {
+    stddev_cartesian_.resize(id + 1);
+    stddev_range_.resize(id + 1);
+    stddev_azimuth_.resize(id + 1);
+
+    pos_x_.resize(id + 1);
+    pos_y_.resize(id + 1);
+    pos_z_.resize(id + 1);
+  }
+
+  ImGui::Text("Noise Parameters:");
+
+  std::string std_cartesian_label = "Std Cartesian##" + std::to_string(id);
+  std::string std_range_label = "Std Range##" + std::to_string(id);
+  std::string std_azimuth_label = "Std Azimuth##" + std::to_string(id);
+
+  ImGui::SliderFloat(std_cartesian_label.c_str(), &stddev_cartesian_.at(id),
+                     0.0f, 10.0f, "%.3f");
+  ImGui::SliderFloat(std_range_label.c_str(), &stddev_range_.at(id), 0.0f,
+                     10.0f, "%.3f");
+  ImGui::SliderFloat(std_azimuth_label.c_str(), &stddev_azimuth_.at(id), 0.0f,
+                     1.0f, "%.4f");
+
+  std::string set_noise_label = "Apply Noise Settings##" + std::to_string(id);
+
+  if (ImGui::Button(set_noise_label.c_str())) {
+    radar_sim_->at(id)->SetStdCartesianDeviation(stddev_cartesian_.at(id));
+    radar_sim_->at(id)->SetStdRangeDeviation(stddev_range_.at(id));
+    radar_sim_->at(id)->SetStdAzimuthDeviation(stddev_azimuth_.at(id));
+  }
+
+  ImGui::Text("Position Settings:");
+
+  std::string pos_x_label = "Pos X##" + std::to_string(id);
+  std::string pos_y_label = "Pos Y##" + std::to_string(id);
+  std::string pos_z_label = "Pos Z##" + std::to_string(id);
+
+  ImGui::SliderFloat(pos_x_label.c_str(), &pos_x_.at(id), -100.0f, 100.0f,
+                     "%.2f");
+  ImGui::SliderFloat(pos_y_label.c_str(), &pos_y_.at(id), -100.0f, 100.0f,
+                     "%.2f");
+  ImGui::SliderFloat(pos_z_label.c_str(), &pos_z_.at(id), -10.0f, 10.0f,
+                     "%.2f");
+
+  std::string apply_pos_label = "Apply Position##" + std::to_string(id);
+
+  if (ImGui::Button(apply_pos_label.c_str())) {
+    SensVec2D pos = {pos_x_.at(id), pos_y_.at(id)};
+    radar_sim_->at(id)->SetSensorPosition(pos);
+  }
+}
+
 }  // namespace app
 
 }  // namespace sensfus
