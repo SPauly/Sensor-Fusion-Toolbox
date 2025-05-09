@@ -33,7 +33,7 @@ using RadarSimState =
 
 class RadarSim : public SimBase {
  public:
-  explicit RadarSim() = default;
+  explicit RadarSim();
   virtual ~RadarSim() noexcept = default;
 
   virtual void Init() override;
@@ -176,7 +176,7 @@ class RadarSim : public SimBase {
   std::vector<unsigned long long> traj_index_offset_;
   std::vector<ObjectPosition2D> cart_positions_, true_pos;
   SensVec2D radar_position_;
-  std::vector<ObjectState2D> rang_azimuth_states_;
+  std::vector<ObjectPosition2D> rang_azimuth_states_;
 
   RadarSimState curr_state_;
 
@@ -186,6 +186,8 @@ class RadarSim : public SimBase {
   double range_std_dev_ = 0.0;  // Standard deviation of the range measurement
   double azimuth_std_dev_ =
       0.0;  // Standard deviation of the azimuth measurement
+
+  Eigen::Matrix<ScalarType, 2, 6> H_;
 };
 
 }  // namespace sim

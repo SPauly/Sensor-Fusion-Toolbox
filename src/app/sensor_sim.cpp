@@ -228,6 +228,7 @@ void SensorSim::SensorControl() {
     static float update_time_ms = 100.0f;  // Default 100 ms
     ImGui::SliderFloat("Update Time (ms)", &update_time_ms, 1.0f, 10000.0f,
                        "%.1f ms", ImGuiSliderFlags_Logarithmic);
+
     radar_sim_->at(radar_id_)->SetUpdateRate(
         static_cast<uint64_t>(update_time_ms * 1e6));
     HelpMarker(

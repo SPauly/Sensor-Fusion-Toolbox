@@ -26,23 +26,53 @@ void RadarPlot::OnUIRender() {
       // check if that we have enough room for trajectoris
       x_truth.resize(radar_sim_->at(0)->GetTrajectoryCount());
       y_truth.resize(radar_sim_->at(0)->GetTrajectoryCount());
+      for (int i = 1; i < radar_sim_->size(); i++) {
+        x_cartesian.resize(radar_sim_->at(i)->GetTrajectoryCount());
+        y_cartesian.resize(radar_sim_->at(i)->GetTrajectoryCount());
+        range_a_x_.resize(radar_sim_->at(i)->GetTrajectoryCount());
+        range_a_y_.resize(radar_sim_->at(i)->GetTrajectoryCount());
+        state_.resize(radar_sim_->size());
+      }
 
       // safe the x and y attributes for each trajectory
       for (auto &pair : state_[0].truth) {
         x_truth[pair.first].push_back(pair.second(0));
         y_truth[pair.first].push_back(pair.second(1));
       }
+
+      // Since we already fetched the state for radar 0 we now need to also
+      // display the data fully directly
+
+      // safe the x and y attributes for each trajectory
+      for (int i = 0; i < state_[0].sensor.zx.size(); i++) {
+        x_cartesian[0].push_back(state_[0].sensor.zx.at(i));
+        y_cartesian[0].push_back(state_[0].sensor.zy.at(i));
+
+        // Convert range and azimuth to cartesian coordinates
+        // x = r*cos(a), y = r*sin(a) + sensor position
+        range_a_x_[0].push_back(state_[0].sensor.range.at(i) *
+                                    std::cos(state_[0].sensor.azimuth.at(i)) +
+                                pos_x_.at(0));
+        range_a_y_[0].push_back(state_[0].sensor.range.at(i) *
+                                    std::sin(state_[0].sensor.azimuth.at(i)) +
+                                pos_y_.at(0));
+      }
     }
 
-    /// TODO: Update all the sensor data
-
+    // Update all the sensor data
     // Display the truth
     if (!x_truth.empty()) {
       DisplayTargets();
     }
 
     /// TODO: Plot all the sensor data
+    std::string label = "Sensor Cartesian" + std::to_string(0);
+    ImPlot::PlotScatter(label.c_str(), x_cartesian[0].data(),
+                        y_cartesian[0].data(), (int)x_cartesian[0].size());
 
+    std::string label2 = "Sensor Range Azimuth" + std::to_string(0);
+    ImPlot::PlotScatter(label2.c_str(), range_a_x_[0].data(),
+                        range_a_y_[0].data(), (int)range_a_x_[0].size());
     ImPlot::EndPlot();
   }
 
@@ -99,7 +129,7 @@ void RadarPlot::RunRadarControl(int id) {
   std::string std_azimuth_label = "Std Azimuth##" + std::to_string(id);
 
   ImGui::SliderFloat(std_cartesian_label.c_str(), &stddev_cartesian_.at(id),
-                     0.0f, 10.0f, "%.3f");
+                     0.0f, 100.0f, "%.3f");
   ImGui::SliderFloat(std_range_label.c_str(), &stddev_range_.at(id), 0.0f,
                      10.0f, "%.3f");
   ImGui::SliderFloat(std_azimuth_label.c_str(), &stddev_azimuth_.at(id), 0.0f,

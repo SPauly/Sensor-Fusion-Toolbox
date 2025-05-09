@@ -19,6 +19,10 @@ class RadarPlot : public utils::Layer {
     state_.resize(radar_sim->size());
     x_truth.resize(1);
     y_truth.resize(1);
+    x_cartesian.resize(1);
+    y_cartesian.resize(1);
+    range_a_x_.resize(1);
+    range_a_y_.resize(1);
   }
   virtual ~RadarPlot() = default;
 
@@ -46,6 +50,8 @@ class RadarPlot : public utils::Layer {
 
   /// Holds one vector per trajectory, with all the x,y values
   std::vector<std::vector<double>> x_truth, y_truth;
+  std::vector<std::vector<double>> x_cartesian, y_cartesian, range_a_x_,
+      range_a_y_;  // Cartesian coordinates as estimated by the sensor
 
   // Control variables for gui
   std::vector<float> stddev_cartesian_, stddev_range_,
