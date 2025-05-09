@@ -86,7 +86,7 @@ class Trajectory {
     return (*points_)[index];
   }
 
-  /// @brief Returns the object state at the given index.
+  /// @brief Returns the number of points in the trajectory.
   /// @return Tragectory size
   inline const unsigned long long GetSize() const { return points_->size(); }
 

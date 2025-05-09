@@ -14,7 +14,8 @@ namespace sensfus {
 namespace app {
 class TrajectoryPlaner : public utils::Layer {
  public:
-  explicit TrajectoryPlaner(std::shared_ptr<sim::RadarSim> radar_sim)
+  explicit TrajectoryPlaner(
+      std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim)
       : Layer(), plot_flags_(0), axis_flags_(0), radar_sim_(radar_sim) {}
   virtual ~TrajectoryPlaner() = default;
 
@@ -33,7 +34,7 @@ class TrajectoryPlaner : public utils::Layer {
   bool drawing_ = false;  // Flag to indicate if the trajectory is being drawn
 
   // Simulation data
-  std::shared_ptr<sim::RadarSim> radar_sim_;
+  std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim_;
   sensfus::sim::Trajectory<ObjectState2D> traj_;
 };
 

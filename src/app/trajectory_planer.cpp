@@ -9,7 +9,7 @@ namespace app {
 void TrajectoryPlaner::OnAttach() {}
 
 void TrajectoryPlaner::OnUIRender() {
-  ImGui::Begin("Tragectory Planer");
+  ImGui::Begin("Tragectory Planer", nullptr, window_flags_);
 
   ImPlot::SetNextAxesLimits(0, 10, 0, 10, ImGuiCond_Once);
 
@@ -54,7 +54,11 @@ void TrajectoryPlaner::OnUIRender() {
 
   if (ImGui::Button("Load")) {
     traj_.FromLineVector(trajectory_);
-    radar_sim_->PushTrajectory(traj_);
+
+    // Send trajectory to all registered Sensors
+    for (auto& sim : *radar_sim_) {
+      sim->PushTrajectory(traj_);
+    }
   }
 
   ImGui::End();

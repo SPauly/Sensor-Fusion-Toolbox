@@ -6,11 +6,16 @@
 #include <Windows.h>
 #endif
 
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <imgui_internal.h>
-#include <implot.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include "implot.h"
+#include <stdio.h>
+#define GL_SILENCE_DEPRECATION
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+#include <GLES2/gl2.h>
+#endif
+#include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 
 namespace sensfus {
 namespace app {
@@ -58,9 +63,10 @@ bool SensorSim::Init() {
   // GL 3.0 + GLSL 130
   const char *glsl_version = "#version 130";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
-  // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+
 #endif
 
   // Create window with graphics context
@@ -81,6 +87,8 @@ bool SensorSim::Init() {
   io_->ConfigFlags |=
       ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport / Platform
                                          // Windows
+  io_->BackendFlags |=
+      ImGuiBackendFlags_RendererHasVtxOffset;  // Enable more than 64k vertices
   // io_->ConfigViewportsNoAutoMerge = true;
   // io_->ConfigViewportsNoTaskBarIcon = true;
 
@@ -99,8 +107,11 @@ bool SensorSim::Init() {
   viewport_ = ImGui::GetMainViewport();
 
   // Init the necessary layers
-  radar_sim_ = std::make_shared<sim::RadarSim>();
-  layer_stack_.PushLayer(std::make_shared<RadarPlot>(radar_sim_));
+  radar_sim_ = std::make_shared<std::vector<std::shared_ptr<sim::RadarSim>>>();
+  radar_sim_->push_back(std::make_shared<sim::RadarSim>());
+  radar_sim_->at(0)->Init();
+  radar_plot_ = std::make_shared<RadarPlot>(radar_sim_);
+  layer_stack_.PushLayer(radar_plot_);
   layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(radar_sim_));
 
   return true;
@@ -112,7 +123,11 @@ void SensorSim::Shutdown() {
     layer->OnDetach();
   }
 
-  radar_sim_->Stop();
+  for (auto &radar : *radar_sim_) {
+    /// TODO: This will take too long since all the wait times of the simulator
+    /// iterations will accumulate. Fix it by creating immidiate stop
+    radar->Stop();
+  }
   layer_stack_.clear();
 
   // Destroy the ImPlot context
@@ -152,6 +167,12 @@ bool SensorSim::Render() {
 
   MenuBar();
 
+  if (adding_sensor_) {
+    AddSensor();
+  }
+
+  SensorControl();
+
   // Rendering
   ImGui::Render();
   glfwGetFramebufferSize(window_, &temp_display_w_, &temp_display_h_);
@@ -175,29 +196,15 @@ bool SensorSim::Render() {
 
 void SensorSim::MenuBar() {
   if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("Menu")) {
-      ImGui::MenuItem("Add Project", "STRG + P");
+    if (ImGui::BeginMenu("File")) {
+      ImGui::MenuItem("Add Sensor", "STRG + P");
+      adding_sensor_ = true;
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
       if (ImGui::MenuItem("Toggle Dark/Light mode [not impl]", "",
                           &use_dark_mode))
         SetStyle();
-      if (ImGui::MenuItem("Show Graph [beta]", "STRG + G", &show_graph_)) {
-        if (show_graph_) {
-          glfwSetWindowSize(window_, display_w_ + display_w_offset_graph_,
-                            display_h_);
-          // layer_stack_.ShowLayer(graph_);
-        } else {
-          glfwSetWindowSize(window_, display_w_, display_h_);
-          // layer_stack_.HideLayer(graph_);
-        }
-      }
-
-      if (ImGui::MenuItem("Enable open workspace [beta]", "STRG+O",
-                          &use_open_workspace)) {
-        // Set the open_workspace flags in the graph layer
-      }
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
@@ -212,6 +219,56 @@ void SensorSim::MenuBar() {
       ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
+  }
+}
+
+void SensorSim::SensorControl() {
+  if (ImGui::Begin("Sensor Control")) {
+    ImGui::Text("Sensor Control Window");
+    static float update_time_ms = 100.0f;  // Default 100 ms
+    ImGui::SliderFloat("Update Time (ms)", &update_time_ms, 1.0f, 10000.0f,
+                       "%.1f ms", ImGuiSliderFlags_Logarithmic);
+    radar_sim_->at(radar_id_)->SetUpdateRate(
+        static_cast<uint64_t>(update_time_ms * 1e6));
+    HelpMarker(
+        "Controls how often the radar simulation updates. Lower values mean "
+        "faster updates.",
+        "(?)");
+
+    ImGui::Separator();
+
+    for (int i = 0; i <= radar_id_; i++) radar_plot_->RunRadarControl(i);
+
+    ImGui::End();
+  }
+}
+
+void SensorSim::AddSensor() {
+  ImGui::OpenPopup("Adding Sensor");
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+  if (ImGui::BeginPopupModal("Adding Sensor", NULL,
+                             ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::Text("Which Sensor do you want to add?");
+
+    static float x, y, z;
+
+    ImGui::PushItemWidth(100);
+    ImGui::InputFloat("x", &x);
+    ImGui::InputFloat("y", &y);
+    ImGui::InputFloat("z", &z);
+    ImGui::PopItemWidth();
+
+    if (ImGui::Button("Create Sensor")) {
+      radar_sim_->push_back(std::make_shared<sim::RadarSim>());
+      radar_id_++;
+      radar_sim_->at(radar_id_)->Init();
+
+      adding_sensor_ = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
   }
 }
 

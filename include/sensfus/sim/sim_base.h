@@ -34,10 +34,6 @@ class SimBase {
   /// @brief Stops the simulation and the environment. After this call, a new
   /// call to Init is required.
   virtual void Stop() = 0;
-
-  /// @brief Changes the update rate of the simulation.
-  /// @param rate_in_ns The new update rate in nanoseconds.
-  virtual void ChangeUpdateRate(double rate_in_ns) = 0;
 };
 
 }  // namespace sim

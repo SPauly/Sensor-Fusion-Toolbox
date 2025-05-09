@@ -12,7 +12,7 @@ void RadarSim::Init() {
   // Init all the simulation data to zero
   trajectories_.clear();
   cart_positions_.clear();
-  radar_position_ = ObjectPosition2D::Zero();
+  radar_position_ = SensVec2D{0.0, 0.0};
   rang_azimuth_states_.clear();
 
   sim_thread_ = std::jthread([this](std::stop_token stoken) {
@@ -21,10 +21,11 @@ void RadarSim::Init() {
       cv_start_.wait(lock, [this] { return start_; });
 
       while (!should_stop_) {
-        utils::RateTimer timer(std::chrono::seconds(5));
+        utils::RateTimer timer(
+            std::chrono::nanoseconds(static_cast<long long>(update_rate_)));
         RunImpl();
         lock.unlock();
-        timer.WaitRemaining();
+        timer.WaitRemaining();  // Wait for the next update
         lock.lock();
       }
     }
@@ -52,12 +53,9 @@ void RadarSim::Stop() {
   if (sim_thread_.joinable()) {
     sim_thread_.request_stop();
     sim_thread_.join();
-  }
-}
 
-void RadarSim::ChangeUpdateRate(double rate_in_ns) {
-  std::unique_lock<std::mutex> lock(mtx_);
-  update_rate_ = rate_in_ns;
+    start_ = false;  // Reset the start flag
+  }
 }
 
 RadarSimState RadarSim::GetState() {
@@ -77,20 +75,34 @@ void RadarSim::RunImpl() {
   curr_state_.sensor.Clear();
 
   // Update the simulation data for all the trajectories
-  for (auto& trajectory : trajectories_) {
-    // Update the true trajectory position
-    true_pos.push_back(trajectory.GetState(curr_index_).head<2>());
+  for (size_t i = 0; i < trajectories_.size(); i++) {
+    if (trajectories_.at(i).GetSize() >=
+        curr_index_ - traj_index_offset_.at(i)) {
+      // Update the true trajectory position -> account for the offset that the
+      // trajectory was added to a running simulation
+      true_pos.push_back(trajectories_.at(i)
+                             .GetState(curr_index_ - traj_index_offset_.at(i))
+                             .head<2>());
 
-    // Update the cartesian position
-    cart_positions_.push_back(trajectory.GetState(curr_index_).head<2>());
-    // update the rang and azimuth states
+      // The trajectories position in the vector is its id
+      curr_state_.truth.push_back(std::make_pair(
+          i, trajectories_.at(i).GetState(curr_index_ -
+                                          traj_index_offset_.at(i))));
 
-    // Create the current state data
-    curr_state_.truth.push_back(trajectory.GetState(curr_index_));
+      // Update the cartesian position
+      cart_positions_.push_back(
+          trajectories_.at(i)
+              .GetState(curr_index_ - traj_index_offset_.at(i))
+              .head<2>());
+      // update the rang and azimuth states
+
+      has_update_ = true;  // Set the update flag to true
+    }
   }
 
+  // Also update random noise or static objects
+
   curr_index_++;
-  has_update_ = true;
 }
 
 }  // namespace sim

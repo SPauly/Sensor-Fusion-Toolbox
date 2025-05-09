@@ -35,6 +35,9 @@ class SensorSim : public ApplicationBase {
 
  private:
   void MenuBar();
+  void SensorControl();
+
+  void AddSensor();
 
   void ConfigWindow();
   void SetStyle();
@@ -46,8 +49,9 @@ class SensorSim : public ApplicationBase {
  private:
   // config
   bool use_open_workspace = false;
-  bool show_graph_ = false;
+  bool hide_simulation_ = false;
   bool use_dark_mode = false;
+  bool adding_sensor_ = false;
 
   // internal use
   GLFWwindow *window_;
@@ -56,9 +60,8 @@ class SensorSim : public ApplicationBase {
   bool submitting_feedback_ = false;
 
   // Appearence
-  const int display_w_ = 445;
-  const int display_h_ = 650;
-  const int display_w_offset_graph_ = 445;
+  const int display_w_ = 1400;
+  const int display_h_ = 950;
   int temp_display_w_, temp_display_h_;  // for temporary use
   const ImGuiWindowFlags closed_workspace_flags_ = ImGuiWindowFlags_NoCollapse |
                                                    ImGuiWindowFlags_NoMove |
@@ -74,7 +77,9 @@ class SensorSim : public ApplicationBase {
 
   utils::LayerStack layer_stack_;
 
-  std::shared_ptr<sensfus::sim::RadarSim> radar_sim_;
+  std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim_;
+  std::shared_ptr<RadarPlot> radar_plot_;
+  int radar_id_ = 0;
 };
 
 }  // namespace app
