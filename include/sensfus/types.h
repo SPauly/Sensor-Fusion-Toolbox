@@ -9,6 +9,7 @@ namespace sensfus {
 // -------------------------------------------------------
 
 using ScalarType = double;
+using TimeStepIdType = unsigned long long;
 
 struct SensVec2D {
   ScalarType x;
@@ -40,6 +41,41 @@ using ObjectVelocity3D =
     Eigen::Matrix<ScalarType, 3, 1>;  // x_k = (vx, vy, vz)^T
 using ObjectAcceleratio3D =
     Eigen::Matrix<ScalarType, 3, 1>;  // x_k = (ax, ay, az)^T
+
+// -------------------------------------------------------
+// Data Transmission types
+// -------------------------------------------------------
+
+using TargetIdType = unsigned int;
+
+/// @brief DTO for the true target positions.
+/// @tparam ObjectPosType
+template <typename ObjectPosType = ObjectPosition2D>
+struct TrueTargetPositions {
+  // Stores the target ID and its position
+  std::vector<std::pair<TargetIdType, ObjectPosType>> positions;
+
+  // Store the update id
+  TimeStepIdType id = 0;
+
+  TrueTargetPositions() = default;
+  TrueTargetPositions(std::vector<std::pair<TargetIdType, ObjectPosType>> pos,
+                      TimeStepIdType id)
+      : positions(std::move(pos)), id(id) {}
+};
+
+template <typename ObjectType = ObjectState2D>
+struct TrueTargetStates {
+  // Stores the target ID and its state
+  std::vector<std::pair<TargetIdType, ObjectType>> states;
+
+  // Store the update id
+  TimeStepIdType id = 0;
+};
+
+// -------------------------------------------------------
+// ObjectStateWrapper
+// -------------------------------------------------------
 
 /// @brief Wrapper class for ObjectState to provide easier access to its
 /// components. This class allows you to get and set the position, velocity, and
