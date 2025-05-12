@@ -8,14 +8,14 @@
 
 #include "sensfus/types.h"
 #include "sensfus/utils/eventbus.h"
-#include "sensfus/sim/sim_base.h"
+#include "sensfus/internal/sim_base.h"
 #include "sensfus/sim/object_model.h"
 #include "sensfus/sim/trajectory.h"
 
 namespace sensfus {
 namespace sim {
 
-class SensorSimulator : public SimBase {
+class SensorSimulator : public internal::SimBase {
  public:
   explicit SensorSimulator();
   virtual ~SensorSimulator() noexcept;
@@ -83,8 +83,6 @@ class SensorSimulator : public SimBase {
   bool should_stop_ = false;
   bool rec_update_ =
       false;  // Flag to indicate if the simulation received data during update
-  bool safe_full_true_state_ =
-      false;                       // Safe position, velocity, and acceleration
   TimeStepIdType curr_index_ = 0;  // Current index of the trajectory
 
   // Thread control variables
@@ -94,15 +92,13 @@ class SensorSimulator : public SimBase {
 
   // Simulation data
   std::vector<Trajectory<ObjectState2D>> trajectories_;
-  std::vector<unsigned long> traj_index_offset_;
-  std::vector<TrueTargetPositions<ObjectPosition2D>>
-      true_pos_;  // True target positions
-  std::vector<TrueTargetStates<ObjectState2D>>
-      true_states_;  // True target states
+  std::vector<unsigned long> traj_index_offset_;  // True target positions
+  std::vector<TrueTargetState2D> true_states_;    // True target states
 
   // Event bus for communication
   const std::shared_ptr<utils::EventBus> event_bus_ =
       std::make_shared<utils::EventBus>();
+  std::shared_ptr<utils::Publisher<TrueTargetState2D>> target_pub_;
 };
 
 }  // namespace sim

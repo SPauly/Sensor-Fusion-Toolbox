@@ -11,8 +11,8 @@ namespace sensfus {
 namespace sim {
 
 SensorSimulator::SensorSimulator() {
-  // Init all the simulation data to zero
-  trajectories_.clear();
+  // Get the event bus and publisher
+  target_pub_ = event_bus_->AddChannel<TrueTargetState2D>("TrueTargetState2D");
 
   sim_thread_ = std::jthread([this](std::stop_token stoken) {
     while (!stoken.stop_requested()) {
@@ -60,17 +60,17 @@ void SensorSimulator::HaltSimulation() {
 }
 
 void SensorSimulator::ResetSimulation() {
-  // Impelement this
+  HaltSimulation();
+
+  // Implement this later
 }
 
 void SensorSimulator::RunImpl() {
   // Retrieve the current state of all the simulated objects
-  for (TargetIdType i = 0; i < trajectories_.size(); i++) {
-    true_pos_.push_back(TrueTargetPositions<ObjectPosition2D>());
-    if (safe_full_true_state_) {
-      true_states_.push_back(TrueTargetStates<ObjectState2D>());
-    }
+  true_states_.push_back(TrueTargetState2D());
+  true_states_.back().id = curr_index_;
 
+  for (TargetIdType i = 0; i < trajectories_.size(); i++) {
     // Check if the trajectory is valid and has enough data
     if (trajectories_.at(i).GetSize() >=
         curr_index_ - traj_index_offset_.at(i)) {
@@ -79,18 +79,22 @@ void SensorSimulator::RunImpl() {
       ObjectState2D target_pos =
           trajectories_.at(i).GetState(curr_index_ - traj_index_offset_.at(i));
 
-      true_pos_.back().positions.push_back(
+      true_states_.back().positions.push_back(
           std::make_pair(i, target_pos.head<2>()));
-      true_pos_.back().id = curr_index_;
 
-      if (safe_full_true_state_) {
-        true_states_.back().states.push_back(std::make_pair(i, target_pos));
-        true_states_.back().id = curr_index_;
-      }
+      // Also update the velocity and acceleration
+      true_states_.back().velocities.push_back(
+          std::make_pair(i, target_pos.segment<2>(2)));
+      true_states_.back().accelerations.push_back(
+          std::make_pair(i, target_pos.tail<2>()));
     }
   }
 
-  // Also update static objects or other stuff
+  // Publish the current state to the event bus
+  target_pub_->Publish(true_states_.back());
+
+  // Get the updates from the sensors here to safe them
+  /// TODO: Implement this
 
   curr_index_++;
 }
