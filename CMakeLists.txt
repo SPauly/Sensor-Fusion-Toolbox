@@ -97,6 +97,7 @@ set(UTILS_TESTS
   timers_test
   types_test
   trajectory_test
+  eventbus_test
 )
 
 set(SINGLE_FILE_TESTS

@@ -3,13 +3,13 @@
 #include <atomic>
 #include <vector>
 #include <chrono>
-#include "sensfus/internal/eventbus.h"
+#include "sensfus/utils/eventbus.h"
 
 namespace sensfus {
 namespace testing {
 
 TEST(EventBusTest, BasicPublishSubscribe) {
-  internal::EventBus bus;
+  utils::EventBus bus;
   bus.AddChannel<int>("numbers");
   auto sub1 = bus.Subscribe<int>("numbers");
   auto sub2 = bus.Subscribe<int>("numbers");
@@ -30,7 +30,7 @@ TEST(EventBusTest, BasicPublishSubscribe) {
 }
 
 TEST(EventBusTest, MultipleMessages) {
-  internal::EventBus bus;
+  utils::EventBus bus;
   bus.AddChannel<std::string>("strings");
   auto sub = bus.Subscribe<std::string>("strings");
 
@@ -48,7 +48,7 @@ TEST(EventBusTest, MultipleMessages) {
 }
 
 TEST(EventBusTest, DataIsRemovedAfterAllFetched) {
-  internal::EventBus bus;
+  utils::EventBus bus;
   bus.AddChannel<int>("numbers");
   auto sub1 = bus.Subscribe<int>("numbers");
   auto sub2 = bus.Subscribe<int>("numbers");
@@ -74,7 +74,7 @@ TEST(EventBusTest, DataIsRemovedAfterAllFetched) {
 }
 
 TEST(EventBusTest, MultithreadedPublishSubscribe) {
-  internal::EventBus bus;
+  utils::EventBus bus;
   bus.AddChannel<int>("numbers");
   auto sub1 = bus.Subscribe<int>("numbers");
   auto sub2 = bus.Subscribe<int>("numbers");

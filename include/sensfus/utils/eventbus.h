@@ -1,5 +1,5 @@
-#ifndef SENSFUS_INTERNAL_EVENTBUS_H
-#define SENSFUS_INTERNAL_EVENTBUS_H
+#ifndef SENSFUS_UTILS_EVENTBUS_H
+#define SENSFUS_UTILS_EVENTBUS_H
 
 #include <functional>
 #include <memory>
@@ -9,9 +9,10 @@
 #include <unordered_map>
 #include <vector>
 #include <typeindex>
+#include <condition_variable>
 
 namespace sensfus {
-namespace internal {
+namespace utils {
 
 // Forward declaration
 template <typename T>
@@ -91,17 +92,47 @@ class Channel {
       return data;
     }
 
+    /// @brief Get the latest data from the channel. This will not remove the
+    /// data from the queue.
+    /// @return Latest data or nullptr if the queue is empty.
+    DataPtr FetchLatest() {
+      std::lock_guard<std::mutex> lock(mtx_);
+      return latest_data_;
+    }
+
+    /// @brief Wait for new data to be published. This will block until new data
+    /// arrives.
+    DataPtr WaitForData() {
+      std::unique_lock<std::mutex> lock(mtx_);
+      cv_.wait(lock, [this] { return !queue_.empty(); });
+      auto data = queue_.front();
+      queue_.pop();
+      return data;
+    }
+
+    /// @brief Clear the queue and latest data. This will remove all data from
+    /// the queue and set the latest data to nullptr.
+    void Clear() {
+      std::lock_guard<std::mutex> lock(mtx_);
+      queue_ = std::queue<DataPtr>();
+      latest_data_ = nullptr;
+    }
+
    private:
-    // Internal: called by Channel to deliver new data
+    // internal: called by Channel to deliver new data
     void deliver(const DataPtr& data) {
       std::lock_guard<std::mutex> lock(mtx_);
       queue_.push(data);
+      latest_data_ = data;
+      cv_.notify_one();
     }
 
    private:
     Channel<T>* channel_;
     std::queue<DataPtr> queue_;
+    DataPtr latest_data_;
     std::mutex mtx_;
+    std::condition_variable cv_;
   };
 
   /// @brief Subscribe to the channel. This will return a Subscription object
@@ -207,7 +238,7 @@ class EventBus {
   std::mutex mtx_;
 };
 
-}  // namespace internal
+}  // namespace utils
 }  // namespace sensfus
 
-#endif  // SENSFUS_INTERNAL_EVENTBUS_H
+#endif  // SENSFUS_UTILS_EVENTBUS_H

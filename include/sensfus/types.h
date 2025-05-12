@@ -47,30 +47,41 @@ using ObjectAcceleratio3D =
 // -------------------------------------------------------
 
 using TargetIdType = unsigned int;
+using SensorIdType = unsigned int;
 
-/// @brief DTO for the true target positions.
-/// @tparam ObjectPosType
-template <typename ObjectPosType = ObjectPosition2D>
-struct TrueTargetPositions {
-  // Stores the target ID and its position
-  std::vector<std::pair<TargetIdType, ObjectPosType>> positions;
-
+/// @brief Struct to hold the true target state. This includes the position,
+/// velocity, and acceleration of the target. The ID is used to identify the
+/// targets timestep
+struct TrueTargetState2D {
+  // Stores the target ID and its state
+  std::vector<std::pair<TargetIdType, ObjectPosition2D>> positions;
+  std::vector<std::pair<TargetIdType, ObjectVelocity2D>> velocities;
+  std::vector<std::pair<TargetIdType, ObjectAcceleration2D>> accelerations;
   // Store the update id
   TimeStepIdType id = 0;
-
-  TrueTargetPositions() = default;
-  TrueTargetPositions(std::vector<std::pair<TargetIdType, ObjectPosType>> pos,
-                      TimeStepIdType id)
-      : positions(std::move(pos)), id(id) {}
 };
 
 template <typename ObjectType = ObjectState2D>
-struct TrueTargetStates {
-  // Stores the target ID and its state
-  std::vector<std::pair<TargetIdType, ObjectType>> states;
+struct SensorInfoBase {
+  virtual void Clear() {}
+};
 
-  // Store the update id
-  TimeStepIdType id = 0;
+struct RadarSensorInfo2D : public SensorInfoBase<ObjectState2D> {
+  // Store the cartesian coordinates of the sensor
+  std::vector<ScalarType> cart_x, cart_y;
+
+  std::vector<ScalarType> range, azimuth;  // Measurement of range and azimuth
+
+  // Store the Sensor and update step
+  SensorIdType id = 0;
+  TimeStepIdType step = 0;
+
+  virtual void Clear() override {
+    cart_x.clear();
+    cart_y.clear();
+    range.clear();
+    azimuth.clear();
+  }
 };
 
 // -------------------------------------------------------
