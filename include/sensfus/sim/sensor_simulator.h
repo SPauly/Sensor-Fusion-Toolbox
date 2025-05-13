@@ -9,6 +9,7 @@
 #include "sensfus/types.h"
 #include "sensfus/utils/eventbus.h"
 #include "sensfus/internal/sim_base.h"
+#include "sensfus/sim/sensor_radar.h"
 #include "sensfus/sim/object_model.h"
 #include "sensfus/sim/trajectory.h"
 
@@ -33,6 +34,15 @@ class SensorSimulator : public internal::SimBase {
 
     // store the index offset of the trajectory
     traj_index_offset_.push_back(curr_index_);
+  }
+
+  /// @brief Adds another sensor to the simulation but does not start it.
+  /// @return New Sensor that was added
+  /// TODO: make a version that can set the size etc. immediately
+  virtual std::shared_ptr<SensorRadar> AddRadarSensor() {
+    radar_sensors_->push_back(
+        std::make_shared<SensorRadar>(radar_sensors_->size(), event_bus_));
+    return radar_sensors_->back();
   }
 
   // Getters
@@ -60,6 +70,11 @@ class SensorSimulator : public internal::SimBase {
   inline const size_t GetTrajectoryCount() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return trajectories_.size();
+  }
+
+  inline const std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>>
+  GetRadarSensors() const {
+    return radar_sensors_;
   }
 
   // Setters
@@ -94,6 +109,10 @@ class SensorSimulator : public internal::SimBase {
   std::vector<Trajectory<ObjectState2D>> trajectories_;
   std::vector<unsigned long> traj_index_offset_;  // True target positions
   std::vector<TrueTargetState2D> true_states_;    // True target states
+
+  // Sensors -> Access to the sensors can be shared with other instances like
+  // the gui
+  std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>> radar_sensors_;
 
   // Event bus for communication
   const std::shared_ptr<utils::EventBus> event_bus_ =

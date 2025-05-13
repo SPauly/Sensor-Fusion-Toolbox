@@ -9,7 +9,7 @@ namespace internal {
 template <typename ObjectType = ObjectState2D>
 class SensorBase {
  public:
-  explicit SensorBase() = default;
+  explicit SensorBase(const SensorIdType &id) : kId(id) {}
   virtual ~SensorBase() = default;
 
   /// @brief Starts the Sensor throughput (whether real or simulation does not
@@ -22,6 +22,9 @@ class SensorBase {
   /// @brief Resets the sensor to its initial state. This will stop the
   /// simulation and clear all data.
   virtual void ResetSensor() = 0;
+
+ protected:
+  const SensorIdType kId;
 };
 }  // namespace internal
 

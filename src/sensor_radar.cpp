@@ -8,11 +8,12 @@
 namespace sensfus {
 namespace sim {
 
-SensorRadar::SensorRadar(std::shared_ptr<utils::EventBus> event_bus)
-    : SensorBase<ObjectState2D>(), event_bus_(event_bus) {
+SensorRadar::SensorRadar(const SensorIdType& id,
+                         std::shared_ptr<utils::EventBus> event_bus)
+    : SensorBase<ObjectState2D>(id), event_bus_(event_bus) {
   // Initialize the event bus and publisher
   radar_pub_ = event_bus_->AddChannel<RadarSensorInfo2D>("RadarSensorInfo2D");
-  target_sub_ = event_bus_->Subscribe<RadarSensorInfo2D>("TargetInfo2D");
+  target_sub_ = event_bus_->Subscribe<TrueTargetState2D>("TrueTargetState2D");
 
   // (I, 0, 0)
   H_ << 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0;
@@ -67,7 +68,7 @@ void SensorRadar::RunImpl() {
 
   // Update the current state
   RadarSensorInfo2D sensor_info;
-  sensor_info.id = 0;             // TODO: Set the correct ID
+  sensor_info.id = kId;
   sensor_info.step = update->id;  // Update the step to be the same as the data
   curr_index_ = update->id;
 

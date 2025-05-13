@@ -15,7 +15,8 @@ namespace sim {
 
 class SensorRadar : public internal::SensorBase<ObjectState2D> {
  public:
-  explicit SensorRadar(std::shared_ptr<utils::EventBus> event_bus);
+  explicit SensorRadar(const SensorIdType& id,
+                       std::shared_ptr<utils::EventBus> event_bus);
   virtual ~SensorRadar() noexcept = default;
 
   /// @brief Starts the Sensor throughput (whether real or simulation does not
