@@ -12,7 +12,9 @@
 #include <imgui.h>
 #include <memory>
 
-#include "sensfus/sim/radar_sim.h"
+#include "sensfus/utils/eventbus.h"
+#include "sensfus/sim/sensor_simulator.h"
+#include "sensfus/sim/sensor_radar.h"
 #include "app/radar_plot.h"
 #include "app/trajectory_planer.h"
 #include "app/utils/layerstack.h"
@@ -77,9 +79,11 @@ class SensorSim : public ApplicationBase {
 
   utils::LayerStack layer_stack_;
 
-  std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim_;
-  std::shared_ptr<RadarPlot> radar_plot_;
-  int radar_id_ = 0;
+  // Simulation specific stuff
+  std::shared_ptr<sensfus::utils::EventBus> event_bus_;
+  sim::SensorSimulator sim_;
+
+  std::vector<RadarPlot> radar_plots_;
 };
 
 }  // namespace app

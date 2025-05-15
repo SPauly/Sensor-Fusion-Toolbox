@@ -107,9 +107,6 @@ bool SensorSim::Init() {
   viewport_ = ImGui::GetMainViewport();
 
   // Init the necessary layers
-  radar_sim_ = std::make_shared<std::vector<std::shared_ptr<sim::RadarSim>>>();
-  radar_sim_->push_back(std::make_shared<sim::RadarSim>());
-  radar_sim_->at(0)->Init();
   radar_plot_ = std::make_shared<RadarPlot>(radar_sim_);
   layer_stack_.PushLayer(radar_plot_);
   layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(radar_sim_));
