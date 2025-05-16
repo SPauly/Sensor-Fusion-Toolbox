@@ -107,24 +107,15 @@ bool SensorSim::Init() {
   viewport_ = ImGui::GetMainViewport();
 
   // Init the necessary layers
-  radar_plot_ = std::make_shared<RadarPlot>(radar_sim_);
-  layer_stack_.PushLayer(radar_plot_);
-  layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(radar_sim_));
+  radar_viewport_ = std::make_shared<SensorViewport>();
+  layer_stack_.PushLayer(radar_viewport_);
+  layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(sim_));
 
   return true;
 }
 
 void SensorSim::Shutdown() {
   // Shutdown layers
-  for (auto &layer : layer_stack_) {
-    layer->OnDetach();
-  }
-
-  for (auto &radar : *radar_sim_) {
-    /// TODO: This will take too long since all the wait times of the simulator
-    /// iterations will accumulate. Fix it by creating immidiate stop
-    radar->Stop();
-  }
   layer_stack_.clear();
 
   // Destroy the ImPlot context
@@ -194,8 +185,7 @@ bool SensorSim::Render() {
 void SensorSim::MenuBar() {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      ImGui::MenuItem("Add Sensor", "STRG + P");
-      adding_sensor_ = true;
+      if (ImGui::MenuItem("Add Sensor", "STRG + P")) adding_sensor_ = true;
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
@@ -235,7 +225,7 @@ void SensorSim::SensorControl() {
 
     ImGui::Separator();
 
-    for (int i = 0; i <= radar_id_; i++) radar_plot_->RunRadarControl(i);
+    for (int i = 0; i <= radar_id_; i++) radar_plot_->RunControllInterface(i);
 
     ImGui::End();
   }
@@ -259,9 +249,9 @@ void SensorSim::AddSensor() {
     ImGui::PopItemWidth();
 
     if (ImGui::Button("Create Sensor")) {
-      radar_sim_->push_back(std::make_shared<sim::RadarSim>());
-      radar_id_++;
-      radar_sim_->at(radar_id_)->Init();
+      radar_plots_.push_back(sim_->AddRadarSensor());
+
+      /// TODO: Register a new radar callback in the viewport here
 
       adding_sensor_ = false;
       ImGui::CloseCurrentPopup();

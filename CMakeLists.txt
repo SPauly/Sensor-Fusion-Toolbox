@@ -42,7 +42,8 @@ set(SENSOR_SIM_TARGETS
   src/app/radar_plot.cpp
   src/app/trajectory_planer.cpp
   src/app/utils/layerstack.cpp
-  src/radar_sim.cpp
+  src/sensor_simulator.cpp
+  src/sensor_radar.cpp
 )
 
 if(WIN32)

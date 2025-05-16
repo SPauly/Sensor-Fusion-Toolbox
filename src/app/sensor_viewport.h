@@ -24,21 +24,18 @@ class SensorViewport : public utils::Layer {
   void RegisterPlotCallback(const std::string name,
                             const SensorPlotCallback cb);
 
-  /// @brief Suspends the callback with the specific name from beeing drawn
-  /// @param name Identifier of the given callback
-  void SuspendCallback(const std::string& name);
-
-  /// @brief Returns a given callback from suspension. This does nothing if the
-  /// callback is not found or is already shown.
-  /// @param name Identifier of the given callback
-  void ShowCallback(const std::string& name);
-
   // Layer interface
   virtual void OnAttach() override;
   virtual void OnDetach() override;
   virtual void OnUIRender() override;
 
  private:
+  // Style
+  ImGuiWindowFlags window_flags_ = ImGuiWindowFlags_NoCollapse;
+  ImPlotFlags plot_flags_;
+  ImPlotAxisFlags axis_flags_;
+
+  // Callbacks
   std::vector<std::pair<const std::string, const SensorPlotCallback>>
       plot_callbacks_;
 

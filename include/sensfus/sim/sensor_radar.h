@@ -92,7 +92,7 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
   /// @brief Sets the position of the sensor. This will be taken into account
   /// for range and azimuth but not cartesian coordinates.
   /// @param pos Position of the sensor in 2D.
-  void SetSensorPosition(const SensVec2D& pos) {
+  void SetSensorPosition(const ObjectPosition2D& pos) {
     std::unique_lock<std::mutex> lock(mtx_);
     radar_position_ = pos;
   }

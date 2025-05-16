@@ -15,6 +15,7 @@
 #include "sensfus/utils/eventbus.h"
 #include "sensfus/sim/sensor_simulator.h"
 #include "sensfus/sim/sensor_radar.h"
+#include "app/sensor_viewport.h"
 #include "app/radar_plot.h"
 #include "app/trajectory_planer.h"
 #include "app/utils/layerstack.h"
@@ -84,6 +85,8 @@ class SensorSim : public ApplicationBase {
   sim::SensorSimulator sim_;
 
   std::vector<RadarPlot> radar_plots_;
+
+  std::shared_ptr<SensorViewport> radar_viewport_;
 };
 
 }  // namespace app

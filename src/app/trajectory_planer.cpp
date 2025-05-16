@@ -1,7 +1,6 @@
 #include "app/trajectory_planer.h"
 
 #include "sensfus/types.h"
-#include "sensfus/sim/trajectory.h"
 
 namespace sensfus {
 namespace app {
@@ -55,10 +54,8 @@ void TrajectoryPlaner::OnUIRender() {
   if (ImGui::Button("Load")) {
     traj_.FromLineVector(trajectory_);
 
-    // Send trajectory to all registered Sensors
-    for (auto& sim : *radar_sim_) {
-      sim->PushTrajectory(traj_);
-    }
+    // Register the trajectory with the simulator
+    sim_->PushTrajectory(traj_);
   }
 
   ImGui::End();
