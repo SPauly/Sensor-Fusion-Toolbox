@@ -3,7 +3,9 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "sensfus/sim/sensor_simulator.h"
 #include "sensfus/types.h"
@@ -43,13 +45,15 @@ class TargetPlot {
   std::shared_ptr<sim::SensorSimulator> sim_;
 
   // Safe the targets id at index i
-  std::vector<TargetIdType> id_of_target_at_index_;
+  std::unordered_map<TargetIdType, size_t> id_of_target_at_index_;
 
   // Safes all the cart positions
   std::vector<std::vector<double>> cart_x_, cart_y_;
 
   // Only safe the current velocity and acceleration
   std::vector<double> velo_x_, velo_y_, acc_x_, acc_y_;
+
+  std::vector<std::string> labels_;
 };
 
 }  // namespace app
