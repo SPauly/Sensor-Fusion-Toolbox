@@ -34,7 +34,7 @@ void RadarPlot::RunPlotInterface() {
 }
 
 void RadarPlot::AddSensorUpdate(
-    const std::shared_ptr<RadarSensorInfo2D> sensor_update) {
+    const std::shared_ptr<const RadarSensorInfo2D> sensor_update) {
   // Add the data for fast access to the plot
   for (int i = 0; i < sensor_update->cart_x.size(); i++) {
     x_cartesian.push_back(sensor_update->cart_x.at(i));

@@ -19,7 +19,10 @@
 
 namespace sensfus {
 namespace app {
-SensorSim::SensorSim() : ApplicationBase() {}
+SensorSim::SensorSim()
+    : ApplicationBase(),
+      sim_(std::make_shared<sim::SensorSimulator>()),
+      target_plot_(TargetPlot(sim_)) {}
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && \
     !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
@@ -107,9 +110,16 @@ bool SensorSim::Init() {
   viewport_ = ImGui::GetMainViewport();
 
   // Init the necessary layers
-  radar_viewport_ = std::make_shared<SensorViewport>();
-  layer_stack_.PushLayer(radar_viewport_);
+  sim_ = std::make_shared<sim::SensorSimulator>();
+
+  sensor_viewport_ = std::make_shared<SensorViewport>();
+  layer_stack_.PushLayer(sensor_viewport_);
   layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(sim_));
+
+  // Setup the event bus communication
+  event_bus_ = sim_->GetEventBus();
+  target_sub_ = event_bus_->Subscribe<TrueTargetState2D>("TrueTargetState2D");
+  radar_sub_ = event_bus_->Subscribe<RadarSensorInfo2D>("RadarSensorInfo2D");
 
   return true;
 }
@@ -145,6 +155,9 @@ bool SensorSim::Render() {
 
   // We need a dockspace for our app layout
   ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+
+  // Handle the simulation data before rendering
+  HandleSimulationData();
 
   for (auto &layer : layer_stack_) {
     layer->OnUIRender();
@@ -182,6 +195,24 @@ bool SensorSim::Render() {
   return true;
 }
 
+void SensorSim::HandleSimulationData() {
+  // Handle the simulation data
+  auto target = target_sub_->Fetch();
+
+  while (target) {
+    target_plot_.AddTargetUpdate(target);
+    target = target_sub_->Fetch();
+  }
+
+  auto radar = radar_sub_->Fetch();
+
+  while (radar) {
+    // Distribute the radar data to the specific radar plot
+    radar_plots_.at(radar->id).AddSensorUpdate(radar);
+    radar = radar_sub_->Fetch();
+  }
+}
+
 void SensorSim::MenuBar() {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
@@ -216,8 +247,7 @@ void SensorSim::SensorControl() {
     ImGui::SliderFloat("Update Time (ms)", &update_time_ms, 1.0f, 10000.0f,
                        "%.1f ms", ImGuiSliderFlags_Logarithmic);
 
-    radar_sim_->at(radar_id_)->SetUpdateRate(
-        static_cast<uint64_t>(update_time_ms * 1e6));
+    sim_->SetUpdateRate(static_cast<uint64_t>(update_time_ms * 1e6));
     HelpMarker(
         "Controls how often the radar simulation updates. Lower values mean "
         "faster updates.",
@@ -225,7 +255,9 @@ void SensorSim::SensorControl() {
 
     ImGui::Separator();
 
-    for (int i = 0; i <= radar_id_; i++) radar_plot_->RunControllInterface(i);
+    for (auto &radar_plot : radar_plots_) {
+      radar_plot.RunControllInterface();
+    }
 
     ImGui::End();
   }
@@ -245,13 +277,20 @@ void SensorSim::AddSensor() {
     ImGui::PushItemWidth(100);
     ImGui::InputFloat("x", &x);
     ImGui::InputFloat("y", &y);
-    ImGui::InputFloat("z", &z);
     ImGui::PopItemWidth();
 
     if (ImGui::Button("Create Sensor")) {
-      radar_plots_.push_back(sim_->AddRadarSensor());
+      radar_sensors_.push_back(sim_->AddRadarSensor());
+      radar_sensors_.back()->SetSensorPosition(ObjectPosition2D(x, y));
 
-      /// TODO: Register a new radar callback in the viewport here
+      radar_plots_.push_back(RadarPlot(radar_sensors_.back()->GetId(), sim_,
+                                       radar_sensors_.back()));
+
+      // Register the necessary gui callbacks
+      std::string tmp =
+          "Radar Sensor " + std::to_string(radar_sensors_.back()->GetId());
+      sensor_viewport_->RegisterPlotCallback(tmp,
+                                             radar_plots_.back().GetCallback());
 
       adding_sensor_ = false;
       ImGui::CloseCurrentPopup();

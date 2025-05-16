@@ -23,6 +23,10 @@ class SensorBase {
   /// simulation and clear all data.
   virtual void ResetSensor() = 0;
 
+  /// @brief Returns the ID of the sensor.
+  /// @return ID of the sensor.
+  const SensorIdType &GetId() const { return kId; }
+
  protected:
   const SensorIdType kId;
 };

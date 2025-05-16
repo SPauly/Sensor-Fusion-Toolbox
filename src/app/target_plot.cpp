@@ -30,7 +30,7 @@ void TargetPlot::RunPlotInterface() {
 }
 
 void TargetPlot::AddTargetUpdate(
-    const std::shared_ptr<TrueTargetState2D> update) {
+    const std::shared_ptr<const TrueTargetState2D> update) {
   for (size_t i = 0; i < update->positions.size(); i++) {
     // First get the index of this target
     auto it = id_of_target_at_index_.find(update->positions.at(i).first);
@@ -38,8 +38,8 @@ void TargetPlot::AddTargetUpdate(
     if (it != id_of_target_at_index_.end()) {
       index = it->second;  // Retrieve the index of this target in the vectors
     } else {
-      id_of_target_at_index_.emplace(std::make_pair<TargetIdType, size_t>(
-          update->positions.at(i).first, cart_x_.size()));
+      id_of_target_at_index_.emplace(
+          std::make_pair(update->positions.at(i).first, cart_x_.size()));
 
       // Make room for the new target
       cart_x_.push_back(std::vector<double>());

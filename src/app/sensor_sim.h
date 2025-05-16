@@ -17,6 +17,7 @@
 #include "sensfus/sim/sensor_radar.h"
 #include "app/sensor_viewport.h"
 #include "app/radar_plot.h"
+#include "app/target_plot.h"
 #include "app/trajectory_planer.h"
 #include "app/utils/layerstack.h"
 
@@ -41,6 +42,7 @@ class SensorSim : public ApplicationBase {
   void SensorControl();
 
   void AddSensor();
+  void HandleSimulationData();
 
   void ConfigWindow();
   void SetStyle();
@@ -82,11 +84,19 @@ class SensorSim : public ApplicationBase {
 
   // Simulation specific stuff
   std::shared_ptr<sensfus::utils::EventBus> event_bus_;
-  sim::SensorSimulator sim_;
+  std::shared_ptr<sensfus::utils::Channel<TrueTargetState2D>::Subscription>
+      target_sub_;
+  std::shared_ptr<sensfus::utils::Channel<RadarSensorInfo2D>::Subscription>
+      radar_sub_;
 
+  std::shared_ptr<sim::SensorSimulator> sim_;
+  std::vector<std::shared_ptr<sim::SensorRadar>> radar_sensors_;
+
+  // Plots
+  TargetPlot target_plot_;
   std::vector<RadarPlot> radar_plots_;
 
-  std::shared_ptr<SensorViewport> radar_viewport_;
+  std::shared_ptr<SensorViewport> sensor_viewport_;
 };
 
 }  // namespace app

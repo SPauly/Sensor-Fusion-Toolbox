@@ -15,8 +15,7 @@ namespace app {
 
 class TargetPlot {
  public:
-  explicit TargetPlot(size_t id, std::shared_ptr<sim::SensorSimulator> sim)
-      : id_(id), sim_(std::move(sim)) {};
+  explicit TargetPlot(std::shared_ptr<sim::SensorSimulator> sim) : sim_(sim) {};
   virtual ~TargetPlot() = default;
 
   /// @brief Interface that provides the imgui control for this sensor
@@ -33,15 +32,12 @@ class TargetPlot {
 
   /// @brief Add a new Target update to the Plot
   /// @param update New Data
-  void AddTargetUpdate(const std::shared_ptr<TrueTargetState2D> update);
+  void AddTargetUpdate(const std::shared_ptr<const TrueTargetState2D> update);
 
  protected:
   virtual void DisplayTargets();
 
  private:
-  // ID of the sensor
-  size_t id_ = 0;
-
   std::shared_ptr<sim::SensorSimulator> sim_;
 
   // Safe the targets id at index i

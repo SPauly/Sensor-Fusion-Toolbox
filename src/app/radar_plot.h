@@ -32,7 +32,8 @@ class RadarPlot {
     return std::bind(&RadarPlot::RunPlotInterface, this);
   }
 
-  void AddSensorUpdate(const std::shared_ptr<RadarSensorInfo2D> sensor_update);
+  void AddSensorUpdate(
+      const std::shared_ptr<const RadarSensorInfo2D> sensor_update);
 
  protected:
   virtual void DisplayTargets();
