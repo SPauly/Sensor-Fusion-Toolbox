@@ -31,15 +31,15 @@ void TargetPlot::RunPlotInterface() {
 
 void TargetPlot::AddTargetUpdate(
     const std::shared_ptr<const TrueTargetState2D> update) {
-  for (size_t i = 0; i < update->positions.size(); i++) {
+  for (size_t i = 0; i < update->states.size(); i++) {
     // First get the index of this target
-    auto it = id_of_target_at_index_.find(update->positions.at(i).first);
+    auto it = id_of_target_at_index_.find(update->states.at(i).first);
     size_t index = 0;
     if (it != id_of_target_at_index_.end()) {
       index = it->second;  // Retrieve the index of this target in the vectors
     } else {
       id_of_target_at_index_.emplace(
-          std::make_pair(update->positions.at(i).first, cart_x_.size()));
+          std::make_pair(update->states.at(i).first, cart_x_.size()));
 
       // Make room for the new target
       cart_x_.push_back(std::vector<double>());
@@ -50,20 +50,19 @@ void TargetPlot::AddTargetUpdate(
       acc_x_.push_back(0.0);
       acc_y_.push_back(0.0);
 
-      std::string tmp =
-          "Target " + std::to_string(update->positions.at(i).first);
+      std::string tmp = "Target " + std::to_string(update->states.at(i).first);
       labels_.push_back(tmp);
       index = cart_x_.size() - 1;
     }
 
-    cart_x_.at(index).push_back(update->positions.at(i).second(0));
-    cart_y_.at(index).push_back(update->positions.at(i).second(1));
+    cart_x_.at(index).push_back(update->states.at(i).second(0));
+    cart_y_.at(index).push_back(update->states.at(i).second(1));
 
-    velo_x_.at(index) = update->velocities.at(i).second(0);
-    velo_y_.at(index) = update->velocities.at(i).second(1);
+    velo_x_.at(index) = update->states.at(i).second(2);
+    velo_y_.at(index) = update->states.at(i).second(3);
 
-    acc_x_.at(index) = update->accelerations.at(i).second(0);
-    acc_y_.at(index) = update->accelerations.at(i).second(1);
+    acc_x_.at(index) = update->states.at(i).second(4);
+    acc_y_.at(index) = update->states.at(i).second(5);
   }
 }
 

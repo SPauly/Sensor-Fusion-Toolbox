@@ -74,11 +74,9 @@ void SensorRadar::RunImpl() {
 
   // Update according to the position data
 
-  for (const auto& pos : update->positions) {
+  for (const auto& state : update->states) {
     // Get the position of the target
-    // Here we would have to use H_ to extract the position from the R^6 state
-    // vector
-    ObjectPosition2D target_pos = pos.second;
+    ObjectPosition2D target_pos = H_ * state.second;
 
     // Update the cartesian coordinates
     ObjectPosition2D temp =
@@ -86,8 +84,7 @@ void SensorRadar::RunImpl() {
                           utils::StdNormalGenerator<ScalarType, 2>().sample())
             .eval();
 
-    sensor_info.cart_x.push_back(temp(0));
-    sensor_info.cart_y.push_back(temp(1));
+    sensor_info.cartesian.push_back(temp);
 
     // Update the range and azimuth
     ObjectPosition2D temp2;
@@ -105,8 +102,7 @@ void SensorRadar::RunImpl() {
         azimuth_std_dev_ *
             utils::StdNormalGenerator<ScalarType, 1>().sample_raw());
 
-    sensor_info.range.push_back(temp2(0));
-    sensor_info.azimuth.push_back(temp2(1));
+    sensor_info.range_azimuth.push_back(temp2);
   }
 
   // Publish the sensor information

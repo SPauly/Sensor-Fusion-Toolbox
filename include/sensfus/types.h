@@ -11,16 +11,6 @@ namespace sensfus {
 using ScalarType = double;
 using TimeStepIdType = unsigned long long;
 
-struct SensVec2D {
-  ScalarType x;
-  ScalarType y;
-};
-struct SensVec3D {
-  ScalarType x;
-  ScalarType y;
-  ScalarType z;
-};
-
 // -------------------------------------------------------
 // ObjectState
 // -------------------------------------------------------
@@ -53,10 +43,9 @@ using SensorIdType = unsigned int;
 /// velocity, and acceleration of the target. The ID is used to identify the
 /// targets timestep
 struct TrueTargetState2D {
-  // Stores the target ID and its state
-  std::vector<std::pair<TargetIdType, ObjectPosition2D>> positions;
-  std::vector<std::pair<TargetIdType, ObjectVelocity2D>> velocities;
-  std::vector<std::pair<TargetIdType, ObjectAcceleration2D>> accelerations;
+  // Store the raw target state together with the ID
+  std::vector<std::pair<TargetIdType, ObjectState2D>> states;
+
   // Store the update id
   TimeStepIdType id = 0;
 };
@@ -68,19 +57,19 @@ struct SensorInfoBase {
 
 struct RadarSensorInfo2D : public SensorInfoBase<ObjectState2D> {
   // Store the cartesian coordinates of the sensor
-  std::vector<ScalarType> cart_x, cart_y;
+  std::vector<ObjectPosition2D>
+      cartesian;  // Sensor position in cartesian coordinates
 
-  std::vector<ScalarType> range, azimuth;  // Measurement of range and azimuth
+  std::vector<ObjectPosition2D>
+      range_azimuth;  // Sensor position in polar coordinates
 
   // Store the Sensor and update step
   SensorIdType id = 0;
   TimeStepIdType step = 0;
 
   virtual void Clear() override {
-    cart_x.clear();
-    cart_y.clear();
-    range.clear();
-    azimuth.clear();
+    cartesian.clear();
+    range_azimuth.clear();
   }
 };
 
