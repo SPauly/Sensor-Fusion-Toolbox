@@ -48,6 +48,9 @@ SensorSimulator::~SensorSimulator() {
 
     start_ = false;  // Reset the start flag
   }
+
+  // stop the radar sensors
+  radar_sensors_->clear();
 }
 
 void SensorSimulator::StartSimulation() {
