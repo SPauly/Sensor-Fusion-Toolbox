@@ -113,6 +113,9 @@ bool SensorSim::Init() {
   sim_ = std::make_shared<sim::SensorSimulator>();
 
   sensor_viewport_ = std::make_shared<SensorViewport>();
+  sensor_viewport_->RegisterPlotCallback("Target Plot",
+                                         target_plot_.GetCallback());
+
   layer_stack_.PushLayer(sensor_viewport_);
   layer_stack_.PushLayer(std::make_shared<TrajectoryPlaner>(sim_));
 
@@ -208,7 +211,7 @@ void SensorSim::HandleSimulationData() {
 
   while (radar) {
     // Distribute the radar data to the specific radar plot
-    radar_plots_.at(radar->id).AddSensorUpdate(radar);
+    radar_plots_.at(radar->id)->AddSensorUpdate(radar);
     radar = radar_sub_->Fetch();
   }
 }
@@ -253,10 +256,23 @@ void SensorSim::SensorControl() {
         "faster updates.",
         "(?)");
 
+    // Show start and stop simulation options
+    if (ImGui::Button("Start Simulation")) {
+      sim_->StartSimulation();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Stop Simulation")) {
+      sim_->HaltSimulation();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reset Simulation")) {
+      sim_->ResetSimulation();
+    }
+
     ImGui::Separator();
 
     for (auto &radar_plot : radar_plots_) {
-      radar_plot.RunControllInterface();
+      radar_plot->RunControllInterface();
     }
 
     ImGui::End();
@@ -283,14 +299,14 @@ void SensorSim::AddSensor() {
       radar_sensors_.push_back(sim_->AddRadarSensor());
       radar_sensors_.back()->SetSensorPosition(ObjectPosition2D(x, y));
 
-      radar_plots_.push_back(RadarPlot(radar_sensors_.back()->GetId(), sim_,
-                                       radar_sensors_.back()));
+      radar_plots_.push_back(std::make_shared<RadarPlot>(
+          radar_sensors_.back()->GetId(), sim_, radar_sensors_.back()));
 
       // Register the necessary gui callbacks
       std::string tmp =
           "Radar Sensor " + std::to_string(radar_sensors_.back()->GetId());
-      sensor_viewport_->RegisterPlotCallback(tmp,
-                                             radar_plots_.back().GetCallback());
+      sensor_viewport_->RegisterPlotCallback(
+          tmp, radar_plots_.back()->GetCallback());
 
       adding_sensor_ = false;
       ImGui::CloseCurrentPopup();

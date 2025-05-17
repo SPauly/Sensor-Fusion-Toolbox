@@ -94,7 +94,7 @@ class SensorSim : public ApplicationBase {
 
   // Plots
   TargetPlot target_plot_;
-  std::vector<RadarPlot> radar_plots_;
+  std::vector<std::shared_ptr<RadarPlot>> radar_plots_;
 
   std::shared_ptr<SensorViewport> sensor_viewport_;
 };

@@ -8,11 +8,8 @@ namespace app {
 
 void SensorViewport::RegisterPlotCallback(const std::string name,
                                           const SensorPlotCallback cb) {
-  plot_callbacks_.push_back(
-      std::make_pair<const std::string, const SensorPlotCallback>(
-          std::move(name), std::move(cb)));
-  suspendet_.push_back(
-      std::make_pair<const std::string, bool>(std::move(name), false));
+  plot_callbacks_.push_back(std::make_pair(name, cb));
+  suspendet_.push_back(std::make_pair(name, true));
 }
 
 void SensorViewport::OnAttach() {}
@@ -27,7 +24,7 @@ void SensorViewport::OnUIRender() {
   if (ImPlot::BeginPlot("Fused Sensor Plot")) {
     // Call all registered sensor plot callbacks
     for (size_t i = 0; i < plot_callbacks_.size(); i++) {
-      if (!suspendet_[i].second) plot_callbacks_[i].second();
+      if (suspendet_[i].second) plot_callbacks_[i].second();
     }
     ImPlot::EndPlot();
   }
