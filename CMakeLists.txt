@@ -36,22 +36,26 @@ FetchContent_MakeAvailable(Eigen)
 # Add the gui dependencies
 include(cmake/target_imgui_implot_glfw.cmake)
 
-set(SENSOR_SIM_TARGETS
+
+set(SENSOR_SIM_APP_TARGETS
   src/app/entry_point.cpp
-  src/app/sensor_sim.cpp
   src/app/radar_plot.cpp
+  src/app/sensor_sim.cpp
+  src/app/sensor_viewport.cpp
+  src/app/target_plot.cpp
   src/app/trajectory_planer.cpp
   src/app/utils/layerstack.cpp
-  src/radar_sim.cpp
+  src/sensor_simulator.cpp
+  src/sensor_radar.cpp
 )
 
 if(WIN32)
   add_executable(SensorSimulator WIN32
-    ${SENSOR_SIM_TARGETS}
+    ${SENSOR_SIM_APP_TARGETS}
   )
 else()
   add_executable(SensorSimulator
-    ${SENSOR_SIM_TARGETS}
+    ${SENSOR_SIM_APP_TARGETS}
   )
 endif()
 
@@ -97,6 +101,7 @@ set(UTILS_TESTS
   timers_test
   types_test
   trajectory_test
+  eventbus_test
 )
 
 set(SINGLE_FILE_TESTS

@@ -1,8 +1,8 @@
-#ifndef SENSFUS_OBJECT_MODEL_H
-#define SENSFUS_OBJECT_MODEL_H
+#ifndef SENSFUS_SIM_OBJECT_MODEL_H
+#define SENSFUS_SIM_OBJECT_MODEL_H
 
 #include "sensfus/types.h"
-#include "sensfus/sim/object_model_base.h"
+#include "sensfus/internal/object_model_base.h"
 
 namespace sensfus {
 namespace sim {
@@ -38,4 +38,4 @@ class ObjectModelFactory {
 
 }  // namespace sensfus
 
-#endif  // SENSFUS_OBJECT_MODEL_H
+#endif  // SENSFUS_SIM_OBJECT_MODEL_H

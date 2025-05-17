@@ -5,58 +5,65 @@
 #include <implot.h>
 #include <memory>
 #include <vector>
+#include <functional>
+#include <utility>
 
-#include "sensfus/sim/radar_sim.h"
-#include "app/utils/layer.h"
+#include "sensfus/sim/sensor_simulator.h"
+#include "sensfus/sim/sensor_radar.h"
+#include "sensfus/types.h"
 
 namespace sensfus {
 namespace app {
-class RadarPlot : public utils::Layer {
+class RadarPlot {
  public:
-  explicit RadarPlot(
-      std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim)
-      : Layer(), plot_flags_(0), axis_flags_(0), radar_sim_(radar_sim) {
-    state_.resize(radar_sim->size());
-    x_truth.resize(1);
-    y_truth.resize(1);
-    x_cartesian.resize(1);
-    y_cartesian.resize(1);
-    range_a_x_.resize(1);
-    range_a_y_.resize(1);
-  }
+  explicit RadarPlot(size_t id, std::shared_ptr<sim::SensorSimulator> sim,
+                     std::shared_ptr<sim::SensorRadar> radar);
   virtual ~RadarPlot() = default;
 
-  virtual void OnAttach() override;
-  virtual void OnUIRender() override;
-  virtual void OnDetach() override;
+  /// @brief Interface that provides the imgui control for this sensor
+  void RunControllInterface();
 
-  /// @brief Interface that provides the imgui control of each radar sim
-  /// @param id id of the sensor to control
-  void RunRadarControl(int id);
+  /// @brief Interface that provides the implot output of the sensor
+  void RunPlotInterface();
 
- protected:
-  virtual void DisplayTargets();
+  /// @brief Returns the callback for the sensor plot
+  /// @return Callback for the sensor plot
+  std::function<void()> GetCallback() {
+    return std::bind(&RadarPlot::RunPlotInterface, this);
+  }
+
+  void AddSensorUpdate(
+      const std::shared_ptr<const RadarSensorInfo2D> sensor_update);
 
  private:
-  // Style
-  ImGuiWindowFlags window_flags_ = ImGuiWindowFlags_NoCollapse;
-  ImPlotFlags plot_flags_;
-  ImPlotAxisFlags axis_flags_;
+  // ID of the sensor
+  size_t id_ = 0;
 
   // one radar sim per sensor
-  std::shared_ptr<std::vector<std::shared_ptr<sim::RadarSim>>> radar_sim_;
-  // one state per sensor
-  std::vector<sim::RadarSimState> state_;
+  std::shared_ptr<sim::SensorRadar> radar_;
+  std::shared_ptr<sim::SensorSimulator> sim_;
 
-  /// Holds one vector per trajectory, with all the x,y values
-  std::vector<std::vector<double>> x_truth, y_truth;
-  std::vector<std::vector<double>> x_cartesian, y_cartesian, range_a_x_,
+  // Safe the state of the radar sim for fast display
+  std::vector<double> x_cartesian, y_cartesian, range_a_x_,
       range_a_y_;  // Cartesian coordinates as estimated by the sensor
 
   // Control variables for gui
-  std::vector<float> stddev_cartesian_, stddev_range_,
-      stddev_azimuth_;  // Standard deviation of the sensor measurements
-  std::vector<float> pos_x_, pos_y_, pos_z_;  // Position of the sensor
+  float stddev_cartesian_ = 5.0, stddev_range_ = 2.0,
+        stddev_azimuth_ =
+            0.02;  // Standard deviation of the sensor measurements
+  float pos_x_ = 0.0, pos_y_ = 0.0;  // Position of the sensor
+
+  bool show_cartesian_ = true,
+       show_range_ = true;  // Show the cartesian and range plot
+
+  // Gui stuff
+  std::string std_cartesian_label_, std_range_label_,
+      std_azimuth_label_;  // Labels for the standard deviation
+  std::string pos_x_label_,
+      pos_y_label_;  // Labels for the position of the sensor
+  std::string start_label_, stop_label_, apply_label_;
+  std::string plot_cartesian_label_,
+      plot_range_label_;  // Labels for the plot
 };
 
 }  // namespace app

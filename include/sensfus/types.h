@@ -9,6 +9,7 @@ namespace sensfus {
 // -------------------------------------------------------
 
 using ScalarType = double;
+using TimeStepIdType = unsigned long long;
 
 struct SensVec2D {
   ScalarType x;
@@ -40,6 +41,52 @@ using ObjectVelocity3D =
     Eigen::Matrix<ScalarType, 3, 1>;  // x_k = (vx, vy, vz)^T
 using ObjectAcceleratio3D =
     Eigen::Matrix<ScalarType, 3, 1>;  // x_k = (ax, ay, az)^T
+
+// -------------------------------------------------------
+// Data Transmission types
+// -------------------------------------------------------
+
+using TargetIdType = unsigned int;
+using SensorIdType = unsigned int;
+
+/// @brief Struct to hold the true target state. This includes the position,
+/// velocity, and acceleration of the target. The ID is used to identify the
+/// targets timestep
+struct TrueTargetState2D {
+  // Stores the target ID and its state
+  std::vector<std::pair<TargetIdType, ObjectPosition2D>> positions;
+  std::vector<std::pair<TargetIdType, ObjectVelocity2D>> velocities;
+  std::vector<std::pair<TargetIdType, ObjectAcceleration2D>> accelerations;
+  // Store the update id
+  TimeStepIdType id = 0;
+};
+
+template <typename ObjectType = ObjectState2D>
+struct SensorInfoBase {
+  virtual void Clear() {}
+};
+
+struct RadarSensorInfo2D : public SensorInfoBase<ObjectState2D> {
+  // Store the cartesian coordinates of the sensor
+  std::vector<ScalarType> cart_x, cart_y;
+
+  std::vector<ScalarType> range, azimuth;  // Measurement of range and azimuth
+
+  // Store the Sensor and update step
+  SensorIdType id = 0;
+  TimeStepIdType step = 0;
+
+  virtual void Clear() override {
+    cart_x.clear();
+    cart_y.clear();
+    range.clear();
+    azimuth.clear();
+  }
+};
+
+// -------------------------------------------------------
+// ObjectStateWrapper
+// -------------------------------------------------------
 
 /// @brief Wrapper class for ObjectState to provide easier access to its
 /// components. This class allows you to get and set the position, velocity, and

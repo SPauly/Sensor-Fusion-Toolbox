@@ -1,5 +1,5 @@
-#ifndef SENSFUS_SIM_RADAR_SIM_H
-#define SENSFUS_SIM_RADAR_SIM_H
+#ifndef SIM_SENSOR_RADAR_H
+#define SIM_SENSOR_RADAR_H
 
 #include <vector>
 #include <thread>
@@ -7,56 +7,30 @@
 #include <utility>  // std::pair
 
 #include "sensfus/types.h"
-#include "sensfus/sim/sim_base.h"
-#include "sensfus/sim/object_model.h"
-#include "sensfus/sim/trajectory.h"
+#include "sensfus/utils/eventbus.h"
+#include "sensfus/internal/sensor_base.h"
 
 namespace sensfus {
 namespace sim {
 
-struct RadarDataType {
-  std::vector<ScalarType> zx, zy;          // Measurement in 2D
-  std::vector<ScalarType> range, azimuth;  // Measurement of range and azimuth
-
-  void Clear() {
-    zx.clear();
-    zy.clear();
-    range.clear();
-    azimuth.clear();
-  }
-};
-
-// Holds the truth as trajectory positions and the sensor data measured in this
-// time frame
-using RadarSimState =
-    SimState<std::vector<std::pair<size_t, ObjectState2D>>, RadarDataType>;
-
-class RadarSim : public SimBase {
+class SensorRadar : public internal::SensorBase<ObjectState2D> {
  public:
-  explicit RadarSim();
-  virtual ~RadarSim() noexcept = default;
+  explicit SensorRadar(const SensorIdType& id,
+                       std::shared_ptr<utils::EventBus> event_bus);
+  virtual ~SensorRadar() noexcept;
 
-  virtual void Init() override;
-  virtual void StartSimulation() override;
-  virtual void HaltSimulation() override;
-  virtual void Stop() override;
+  /// @brief Starts the Sensor throughput (whether real or simulation does not
+  /// matter). This will start a thread that publishes new data to the eventbus.
+  virtual void StartSensor() override;
 
-  /// @brief Pushes a trajectory to the simulation. This trajectory will be used
-  /// to simulate the sensor data.
-  /// @param traj Trajectory will be started with the next simulation step.
-  virtual void PushTrajectory(const Trajectory<ObjectState2D>& traj) {
-    std::unique_lock<std::mutex> lock(mtx_);
-    trajectories_.push_back(traj);
+  /// @brief Stops the simulation but leaves the environment running.
+  virtual void HaltSensor() override;
 
-    // store the index offset of the trajectory
-    traj_index_offset_.push_back(curr_index_);
-  }
+  /// @brief Resets the sensor to its initial state. This will stop the
+  /// simulation and clear all data.
+  virtual void ResetSensor() override;
 
   // Getters
-
-  /// @brief Returns the current simulation state. This includes the truth and
-  /// the sensor simulated data.
-  virtual RadarSimState GetState();
 
   /// @brief Returns true if the simulation is running.
   /// @return true if the simulation is running, false otherwise.
@@ -65,10 +39,6 @@ class RadarSim : public SimBase {
     return start_;
   }
 
-  /// @brief Returns true if the simulation has an update.
-  /// @return true if the simulation has an update, false otherwise.
-  virtual bool HasUpdate() const;
-
   /// @brief Returns the current Simulation step
   /// @return Step of the simulation.
   virtual unsigned long long GetStepIndex() const {
@@ -76,16 +46,9 @@ class RadarSim : public SimBase {
     return curr_index_;
   }
 
-  /// @brief Returns the number of different trajectories in the simulation.
-  /// @return
-  virtual const size_t GetTrajectoryCount() const {
-    std::unique_lock<std::mutex> lock(mtx_);
-    return trajectories_.size();
-  }
-
   /// @brief Returns the current Sensor position
   /// @return Position of the sensor in 2D.
-  const SensVec2D& GetSensorPosition() const {
+  const ObjectPosition2D GetSensorPosition() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return radar_position_;
   }
@@ -113,6 +76,11 @@ class RadarSim : public SimBase {
 
   // Setters
 
+  void SetStepIndex(unsigned long long step_index) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    curr_index_ = step_index;
+  }
+
   /// @brief Sets the update rate of the simulation. This is the rate at which
   /// the simulation will run.
   /// @param rate_ns Update rate in nanoseconds.
@@ -124,7 +92,7 @@ class RadarSim : public SimBase {
   /// @brief Sets the position of the sensor. This will be taken into account
   /// for range and azimuth but not cartesian coordinates.
   /// @param pos Position of the sensor in 2D.
-  void SetSensorPosition(const SensVec2D& pos) {
+  void SetSensorPosition(const ObjectPosition2D& pos) {
     std::unique_lock<std::mutex> lock(mtx_);
     radar_position_ = pos;
   }
@@ -154,31 +122,22 @@ class RadarSim : public SimBase {
   virtual void RunImpl();
 
  private:
-  /// TODO: Implement different update rate of model and sensor data
-  // config
-  double update_rate_;
+  // Sharing sensor data
+  std::shared_ptr<utils::EventBus> event_bus_;
+  std::shared_ptr<utils::Publisher<RadarSensorInfo2D>> radar_pub_;
+  std::shared_ptr<utils::Channel<TrueTargetState2D>::Subscription> target_sub_;
 
-  // Flags
-  bool start_ = false;       // Flag to indicate if the simulation is running
-  bool has_update_ = false;  // Flag to indicate if there is a new update
-  bool should_stop_ = false;
-  bool rec_update_ =
-      false;  // Flag to indicate if the simulation received data during update
+  // Simulation step
+  double update_rate_ = 0.0;  // Update rate of the simulation in nanoseconds
   unsigned long long curr_index_ = 0;  // Current index of the trajectory
 
+  bool start_ = false;        // Flag to indicate if the simulation is running
+  bool should_stop_ = false;  // Flag to indicate if the simulation should stop
+
   // Thread control variables
-  std::jthread sim_thread_;
+  std::thread sim_thread_;
   std::condition_variable cv_start_;
   mutable std::mutex mtx_;
-
-  // Simulation data
-  std::vector<Trajectory<ObjectState2D>> trajectories_;
-  std::vector<unsigned long long> traj_index_offset_;
-  std::vector<ObjectPosition2D> cart_positions_, true_pos;
-  SensVec2D radar_position_;
-  std::vector<ObjectPosition2D> rang_azimuth_states_;
-
-  RadarSimState curr_state_;
 
   // Sensor deviation
   double cartesian_std_dev_ =
@@ -186,11 +145,14 @@ class RadarSim : public SimBase {
   double range_std_dev_ = 0.0;  // Standard deviation of the range measurement
   double azimuth_std_dev_ =
       0.0;  // Standard deviation of the azimuth measurement
-
   Eigen::Matrix<ScalarType, 2, 6> H_;
-};
 
+  // Sensor position
+  ObjectPosition2D radar_position_ =
+      ObjectPosition2D::Zero();  // Position of the sensor in 2D
+};
 }  // namespace sim
+
 }  // namespace sensfus
 
-#endif  // SENSFUS_SIM_RADAR_SIM_H
+#endif  // SIM_SENSOR_RADAR_H
