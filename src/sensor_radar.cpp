@@ -76,13 +76,14 @@ void SensorRadar::RunImpl() {
 
   for (const auto& pos : update->positions) {
     // Get the position of the target
+    // Here we would have to use H_ to extract the position from the R^6 state
+    // vector
     ObjectPosition2D target_pos = pos.second;
 
     // Update the cartesian coordinates
     ObjectPosition2D temp =
-        (H_ * target_pos +
-         cartesian_std_dev_ *
-             utils::StdNormalGenerator<ScalarType, 2>().sample())
+        (target_pos + cartesian_std_dev_ *
+                          utils::StdNormalGenerator<ScalarType, 2>().sample())
             .eval();
 
     sensor_info.cart_x.push_back(temp(0));

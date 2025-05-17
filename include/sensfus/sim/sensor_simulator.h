@@ -115,8 +115,7 @@ class SensorSimulator : public internal::SimBase {
   std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>> radar_sensors_;
 
   // Event bus for communication
-  const std::shared_ptr<utils::EventBus> event_bus_ =
-      std::make_shared<utils::EventBus>();
+  std::shared_ptr<utils::EventBus> event_bus_;
   std::shared_ptr<utils::Publisher<TrueTargetState2D>> target_pub_;
 };
 

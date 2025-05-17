@@ -11,9 +11,7 @@ namespace sensfus {
 namespace sim {
 
 SensorSimulator::SensorSimulator() {
-  // Add atleast one radar sensor
-  radar_sensors_ = std::make_shared<std::vector<std::shared_ptr<SensorRadar>>>(
-      1, (0, event_bus_));
+  event_bus_ = std::make_shared<utils::EventBus>();
 
   // Get the event bus and publisher
   target_pub_ = event_bus_->AddChannel<TrueTargetState2D>("TrueTargetState2D");

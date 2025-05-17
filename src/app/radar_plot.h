@@ -35,9 +35,6 @@ class RadarPlot {
   void AddSensorUpdate(
       const std::shared_ptr<const RadarSensorInfo2D> sensor_update);
 
- protected:
-  virtual void DisplayTargets();
-
  private:
   // ID of the sensor
   size_t id_ = 0;

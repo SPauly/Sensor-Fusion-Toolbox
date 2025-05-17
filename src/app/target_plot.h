@@ -34,9 +34,6 @@ class TargetPlot {
   /// @param update New Data
   void AddTargetUpdate(const std::shared_ptr<const TrueTargetState2D> update);
 
- protected:
-  virtual void DisplayTargets();
-
  private:
   std::shared_ptr<sim::SensorSimulator> sim_;
 

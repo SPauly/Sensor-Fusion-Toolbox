@@ -1,6 +1,7 @@
 #ifndef SENSOR_VIEWPORT_H
 #define SENSOR_VIEWPORT_H
 
+#include "imgui.h"  // for ImGuiWindowFlags
 #include <vector>
 #include <functional>
 #include <utility>
@@ -32,8 +33,6 @@ class SensorViewport : public utils::Layer {
  private:
   // Style
   ImGuiWindowFlags window_flags_ = ImGuiWindowFlags_NoCollapse;
-  ImPlotFlags plot_flags_;
-  ImPlotAxisFlags axis_flags_;
 
   // Callbacks
   std::vector<std::pair<const std::string, const SensorPlotCallback>>

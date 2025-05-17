@@ -17,7 +17,7 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
  public:
   explicit SensorRadar(const SensorIdType& id,
                        std::shared_ptr<utils::EventBus> event_bus);
-  virtual ~SensorRadar() noexcept = default;
+  virtual ~SensorRadar() noexcept;
 
   /// @brief Starts the Sensor throughput (whether real or simulation does not
   /// matter). This will start a thread that publishes new data to the eventbus.
