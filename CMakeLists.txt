@@ -24,10 +24,23 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Eigen)
 
 #----------------------------------#
-# Create libraries
+# Create senssimlib library
 #----------------------------------#
 
-# TODO: Build library here
+set(SENSSIMLIB_SOURCES
+  src/sensor_simulator.cpp
+  src/sensor_radar.cpp
+  # Add other core simulation sources here if needed
+)
+
+add_library(senssimlib STATIC ${SENSSIMLIB_SOURCES})
+
+target_include_directories(senssimlib PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
+target_link_libraries(senssimlib PUBLIC Eigen3::Eigen)
 
 #----------------------------------#
 # Build the executables
@@ -45,8 +58,6 @@ set(SENSOR_SIM_APP_TARGETS
   src/app/target_plot.cpp
   src/app/trajectory_planer.cpp
   src/app/utils/layerstack.cpp
-  src/sensor_simulator.cpp
-  src/sensor_radar.cpp
 )
 
 if(WIN32)
@@ -59,14 +70,13 @@ else()
   )
 endif()
 
-add_dependencies(SensorSimulator ${TARGET_LIBRARIES})
-
 target_include_directories(SensorSimulator PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 target_link_libraries(SensorSimulator PRIVATE
+   senssimlib
    ${TARGET_LIBRARIES}
    Eigen3::Eigen
 )
@@ -115,6 +125,6 @@ foreach(target ${SINGLE_FILE_TESTS})
     ${CMAKE_CURRENT_SOURCE_DIR}/tools
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-  target_link_libraries(${target} GTest::gtest_main Eigen3::Eigen) 
+  target_link_libraries(${target} GTest::gtest_main Eigen3::Eigen senssimlib) 
   gtest_discover_tests(${target})
 endforeach()
