@@ -31,7 +31,7 @@ class Trajectory {
   // Type aliases needed
   using RawPosType =
       std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
-                         SensVec2D, SensVec3D>;
+                         ObjectPosition2D, ObjectPosition3D>;
 
   explicit Trajectory(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel)
@@ -66,9 +66,9 @@ class Trajectory {
     for (const auto& point : line_vector) {
       ObjectType state;
       if constexpr (kDim == 2) {
-        state.head<2>() = ObjectPosition2D(point.x, point.y);
+        state.head<2>() = point;
       } else if constexpr (kDim == 3) {
-        state.head<3>() = ObjectPosition3D(point.x, point.y, point.z);
+        state.head<3>() = point;
       }
       points_->emplace_back(state);
     }

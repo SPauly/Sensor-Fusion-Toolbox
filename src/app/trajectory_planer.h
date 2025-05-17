@@ -30,7 +30,7 @@ class TrajectoryPlaner : public utils::Layer {
   ImPlotAxisFlags axis_flags_;
 
   // Safe tragectory
-  std::vector<SensVec2D> trajectory_;
+  std::vector<ObjectPosition2D> trajectory_;
   bool drawing_ = false;  // Flag to indicate if the trajectory is being drawn
 
   // Simulation data

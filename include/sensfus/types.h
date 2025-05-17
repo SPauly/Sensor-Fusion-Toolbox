@@ -11,16 +11,6 @@ namespace sensfus {
 using ScalarType = double;
 using TimeStepIdType = unsigned long long;
 
-struct SensVec2D {
-  ScalarType x;
-  ScalarType y;
-};
-struct SensVec3D {
-  ScalarType x;
-  ScalarType y;
-  ScalarType z;
-};
-
 // -------------------------------------------------------
 // ObjectState
 // -------------------------------------------------------
@@ -53,8 +43,7 @@ using SensorIdType = unsigned int;
 /// velocity, and acceleration of the target. The ID is used to identify the
 /// targets timestep
 struct TrueTargetState2D {
-  // Store the raw target state
-
+  // Store the raw target state together with the ID
   std::vector<std::pair<TargetIdType, ObjectState2D>> states;
 
   // Store the update id

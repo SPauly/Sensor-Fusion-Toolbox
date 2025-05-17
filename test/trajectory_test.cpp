@@ -1,12 +1,16 @@
 #include <gtest/gtest.h>
 #include <sensfus/sim/trajectory.h>
+#include <sensfus/types.h>
 
 namespace sensfus {
 namespace sim {
 namespace sensfus_test {
 
 TEST(TrajectoryTest, ConstructFromLineVector2D) {
-  std::vector<SensVec2D> points = {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}};
+  std::vector<ObjectPosition2D> points = {
+      (ObjectPosition2D() << 1.0, 2.0).finished(),
+      (ObjectPosition2D() << 3.0, 4.0).finished(),
+      (ObjectPosition2D() << 5.0, 6.0).finished()};
   Trajectory<ObjectState2D> traj(points);
 
   ASSERT_EQ(traj.GetSize(), 3);
@@ -20,7 +24,9 @@ TEST(TrajectoryTest, ConstructFromLineVector2D) {
 }
 
 TEST(TrajectoryTest, ConstructFromLineVector3D) {
-  std::vector<SensVec3D> points = {{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}};
+  std::vector<ObjectPosition3D> points = {
+      (ObjectPosition3D() << 1.0, 2.0, 3.0).finished(),
+      (ObjectPosition3D() << 4.0, 5.0, 6.0).finished()};
   Trajectory<ObjectState3D> traj(points);
 
   ASSERT_EQ(traj.GetSize(), 2);
@@ -36,7 +42,9 @@ TEST(TrajectoryTest, ConstructFromLineVector3D) {
 }
 
 TEST(TrajectoryTest, GetStateOutOfBoundsReturnsLast) {
-  std::vector<SensVec2D> points = {{1.0f, 2.0f}, {3.0f, 4.0f}};
+  std::vector<ObjectPosition2D> points = {
+      (ObjectPosition2D() << 1.0, 2.0).finished(),
+      (ObjectPosition2D() << 3.0, 4.0).finished()};
   Trajectory<ObjectState2D> traj(points);
 
   auto state = traj.GetState(100);  // Out of bounds
@@ -45,10 +53,13 @@ TEST(TrajectoryTest, GetStateOutOfBoundsReturnsLast) {
 }
 
 TEST(TrajectoryTest, FromLineVectorReplacesStates) {
-  std::vector<SensVec2D> points1 = {{1.0f, 2.0f}, {3.0f, 4.0f}};
+  std::vector<ObjectPosition2D> points1 = {
+      (ObjectPosition2D() << 1.0, 2.0).finished(),
+      (ObjectPosition2D() << 3.0, 4.0).finished()};
   Trajectory<ObjectState2D> traj(points1);
 
-  std::vector<SensVec2D> points2 = {{7.0f, 8.0f}};
+  std::vector<ObjectPosition2D> points2 = {
+      (ObjectPosition2D() << 7.0, 8.0).finished()};
   traj.FromLineVector(points2);
 
   ASSERT_EQ(traj.GetSize(), 1);

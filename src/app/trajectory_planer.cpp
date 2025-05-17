@@ -25,8 +25,8 @@ void TrajectoryPlaner::OnUIRender() {
     if (trajectory_.size() >= 2) {
       std::vector<float> xs, ys;
       for (const auto& pt : trajectory_) {
-        xs.push_back(pt.x);
-        ys.push_back(pt.y);
+        xs.push_back(pt(0));
+        ys.push_back(pt(1));
       }
       ImPlot::PlotLine("Trajectory", xs.data(), ys.data(), (int)xs.size());
     }
@@ -35,8 +35,8 @@ void TrajectoryPlaner::OnUIRender() {
     if (!trajectory_.empty()) {
       std::vector<float> xs, ys;
       for (const auto& pt : trajectory_) {
-        xs.push_back(pt.x);
-        ys.push_back(pt.y);
+        xs.push_back(pt(0));
+        ys.push_back(pt(1));
       }
       ImPlot::PlotScatter("Trajectory Points", xs.data(), ys.data(),
                           (int)xs.size());

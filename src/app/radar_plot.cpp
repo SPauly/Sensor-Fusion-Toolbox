@@ -36,19 +36,19 @@ void RadarPlot::RunPlotInterface() {
 void RadarPlot::AddSensorUpdate(
     const std::shared_ptr<const RadarSensorInfo2D> sensor_update) {
   // Add the data for fast access to the plot
-  for (int i = 0; i < sensor_update->cart_x.size(); i++) {
-    x_cartesian.push_back(sensor_update->cart_x.at(i));
-    y_cartesian.push_back(sensor_update->cart_y.at(i));
+  for (int i = 0; i < sensor_update->cartesian.size(); i++) {
+    x_cartesian.push_back(sensor_update->cartesian.at(i)(0));
+    y_cartesian.push_back(sensor_update->cartesian.at(i)(1));
   }
 
-  for (int i = 0; i < sensor_update->range.size(); i++) {
+  for (int i = 0; i < sensor_update->range_azimuth.size(); i++) {
     // Convert range and azimuth to cartesian coordinates
     // x = r*cos(a), y = r*sin(a) + sensor position
-    range_a_x_.push_back(sensor_update->range.at(i) *
-                             std::cos(sensor_update->azimuth.at(i)) +
+    range_a_x_.push_back(sensor_update->range_azimuth.at(i)(0) *
+                             std::cos(sensor_update->range_azimuth.at(i)(1)) +
                          pos_x_);
-    range_a_y_.push_back(sensor_update->range.at(i) *
-                             std::sin(sensor_update->azimuth.at(i)) +
+    range_a_y_.push_back(sensor_update->range_azimuth.at(i)(0) *
+                             std::sin(sensor_update->range_azimuth.at(i)(1)) +
                          pos_y_);
   }
 }
