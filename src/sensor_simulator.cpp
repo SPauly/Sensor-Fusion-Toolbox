@@ -77,7 +77,7 @@ void SensorSimulator::RunImpl() {
   true_states_.push_back(TrueTargetState2D());
   true_states_.back().id = curr_index_;
 
-  for (TargetIdType i = 0; i < trajectories_.size(); i++) {
+  for (size_t i = 0; i < trajectories_.size(); i++) {
     // Check if the trajectory is valid and has enough data
     if (trajectories_.at(i).GetSize() >
         curr_index_ - traj_index_offset_.at(i)) {
@@ -86,14 +86,8 @@ void SensorSimulator::RunImpl() {
       ObjectState2D target_pos =
           trajectories_.at(i).GetState(curr_index_ - traj_index_offset_.at(i));
 
-      true_states_.back().positions.push_back(
-          std::make_pair(i, target_pos.head<2>()));
-
-      // Also update the velocity and acceleration
-      true_states_.back().velocities.push_back(
-          std::make_pair(i, target_pos.segment<2>(2)));
-      true_states_.back().accelerations.push_back(
-          std::make_pair(i, target_pos.tail<2>()));
+      true_states_.back().states.push_back(
+          std::make_pair(static_cast<TargetIdType>(i), target_pos));
     }
   }
 
