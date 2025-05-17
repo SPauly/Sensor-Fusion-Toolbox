@@ -76,7 +76,7 @@ void SensorSimulator::RunImpl() {
 
   for (TargetIdType i = 0; i < trajectories_.size(); i++) {
     // Check if the trajectory is valid and has enough data
-    if (trajectories_.at(i).GetSize() >=
+    if (trajectories_.at(i).GetSize() >
         curr_index_ - traj_index_offset_.at(i)) {
       // For later use it is good to extract the target position here -> account
       // for the offset that the trajectory was added to a running simulation
