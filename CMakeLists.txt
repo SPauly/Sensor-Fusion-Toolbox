@@ -30,7 +30,7 @@ FetchContent_MakeAvailable(Eigen)
 set(SENSSIMLIB_SOURCES
   src/sensor_simulator.cpp
   src/sensor_radar.cpp
-  src/object_model_wafe.cpp
+  src/object_model_wave.cpp
   # Add other core simulation sources here if needed
 )
 

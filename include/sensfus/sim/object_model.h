@@ -3,7 +3,7 @@
 
 #include "sensfus/types.h"
 #include "sensfus/internal/object_model_base.h"
-#include "sensfus/sim/object_model_wafe.h"
+#include "sensfus/sim/object_model_Wave.h"
 
 namespace sensfus {
 namespace sim {
@@ -12,7 +12,7 @@ namespace sim {
 /// This enum is used to specify the type of object model to be created.
 enum class ObjectModelType {
   BasicVelocityModel = 0,
-  WafeModel = 1
+  WaveModel = 1
   // Add more models as needed
 };
 
@@ -30,8 +30,8 @@ class ObjectModelFactory {
       std::shared_ptr<std::vector<ObjectType>> states) {
     if (type == ObjectModelType::BasicVelocityModel) {
       return std::make_shared<BasicVelocityModel<ObjectType>>(states);
-    } else if (type == ObjectModelType::WafeModel) {
-      return std::make_shared<WafeModel>(states);
+    } else if (type == ObjectModelType::WaveModel) {
+      return std::make_shared<WaveModel>(states);
     }
     // Add more models as needed
     return nullptr;

@@ -1,5 +1,5 @@
-#ifndef SENSFUS_SIM_OBJECT_MODEL_WAFE_H
-#define SENSFUS_SIM_OBJECT_MODEL_WAFE_H
+#ifndef SENSFUS_SIM_OBJECT_MODEL_Wave_H
+#define SENSFUS_SIM_OBJECT_MODEL_Wave_H
 
 #include "sensfus/internal/object_model_base.h"
 
@@ -8,13 +8,13 @@
 namespace sensfus {
 namespace sim {
 
-class WafeModel : public ObjectModelBase<ObjectState2D> {
+class WaveModel : public ObjectModelBase<ObjectState2D> {
  public:
-  explicit WafeModel(std::shared_ptr<std::vector<ObjectState2D>> states)
+  explicit WaveModel(std::shared_ptr<std::vector<ObjectState2D>> states)
       : ObjectModelBase<ObjectState2D>(states) {
     RecalculateParams();
   }
-  ~WafeModel() override = default;
+  ~WaveModel() override = default;
 
   /// @brief Populates the states with target positions, velocities,
   /// acceleration, tangentials and normalvectors based on the provided sampling
@@ -66,7 +66,7 @@ class WafeModel : public ObjectModelBase<ObjectState2D> {
   double speed_ms_ = 300.0;        // Speed in m/s
   double acceleration_ms2_ = 9.0;  // Acceleration in m/s^2
 
-  // Wafe simulation parameters
+  // Wave simulation parameters
   double omega_ = 0.0;      // Angular velocity in rad/s
   double amplitude_ = 0.0;  // Amplitude of the wave in m
 };
@@ -74,4 +74,4 @@ class WafeModel : public ObjectModelBase<ObjectState2D> {
 }  // namespace sim
 }  // namespace sensfus
 
-#endif  // SENSFUS_SIM_OBJECT_MODEL_WAFE_H
+#endif  // SENSFUS_SIM_OBJECT_MODEL_Wave_H

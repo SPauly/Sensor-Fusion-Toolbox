@@ -1,4 +1,4 @@
-#include "sensfus/sim/object_model_wafe.h"
+#include "sensfus/sim/object_model_wave.h"
 
 #include <cmath>
 
@@ -7,12 +7,12 @@
 namespace sensfus {
 namespace sim {
 
-void WafeModel::ApplyToTrajectory(const double time_between_points_ns) {
+void WaveModel::ApplyToTrajectory(const double time_between_points_ns) {
   // First calculate the period of the wave
   const double period = 2 * M_PI / omega_;  // Period in seconds
 
   // Calculate the number of points in the trajectory based on the sampling rate
-  // and wafe period
+  // and Wave period
   const double sampling_rate =
       time_between_points_ns / 1e9;  // Convert ns to seconds
   const double num_points = period / sampling_rate;
@@ -21,7 +21,7 @@ void WafeModel::ApplyToTrajectory(const double time_between_points_ns) {
   tangentials_.resize(num_points);
   normvecs_.resize(num_points);
 
-  // Calculate the wafe trajectory
+  // Calculate the Wave trajectory
   for (size_t i = 0; i < num_points; ++i) {
     double current_time = i * sampling_rate;  // Current time in seconds
 
