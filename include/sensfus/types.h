@@ -46,6 +46,9 @@ struct TrueTargetState2D {
   // Store the raw target state together with the ID
   std::vector<std::pair<TargetIdType, ObjectState2D>> states;
 
+  // Provide some metadata regarding the state:
+  std::vector<std::pair<TargetIdType, ObjectPosition2D>> tangentials, normvecs;
+
   // Store the update id
   TimeStepIdType id = 0;
 };
