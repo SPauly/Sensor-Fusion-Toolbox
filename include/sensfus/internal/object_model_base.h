@@ -40,6 +40,13 @@ class ObjectModelBase {
     time_between_points_ns_ = time_between_points_ns;
   }
 
+  // Getters
+
+  virtual const ObjectPosition2D GetTangentialAt(
+      const TimeStepIdType timestamp) const = 0;
+  virtual const ObjectPositino2D GetNormVecAt(
+      const TimeStepIdType timestamp) const = 0;
+
  protected:
   double time_between_points_ns_ = 50000.0;  // Time between points in ns
   std::shared_ptr<std::vector<ObjectStateType>> states_ = nullptr;
@@ -61,6 +68,15 @@ class BasicVelocityModel : public ObjectModelBase<ObjectStateType> {
       const double time_between_points_ns = 50000.0) override {
     /// TODO: Implement the basic velocity model
     return;
+  }
+
+  virtual const ObjectPosition2D GetTangentialAt(
+      const TimeStepIdType timestamp) const {
+    return ObjectPosition2D(0, 0);
+  }
+  virtual const ObjectPositino2D GetNormVecAt(
+      const TimeStepIdType timestamp) const {
+    return ObjectPosition2D(0, 0);
   }
 };
 

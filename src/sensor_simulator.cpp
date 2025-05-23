@@ -78,16 +78,25 @@ void SensorSimulator::RunImpl() {
   true_states_.back().id = curr_index_;
 
   for (size_t i = 0; i < trajectories_.size(); i++) {
+    // Determine the relative index for that trajectory
+    auto curr = curr_index_ - traj_index_offset_.at(i);
+
     // Check if the trajectory is valid and has enough data
-    if (trajectories_.at(i).GetSize() >
-        curr_index_ - traj_index_offset_.at(i)) {
+    if (trajectories_.at(i).GetSize() > curr) {
       // For later use it is good to extract the target position here -> account
       // for the offset that the trajectory was added to a running simulation
-      ObjectState2D target_pos =
-          trajectories_.at(i).GetState(curr_index_ - traj_index_offset_.at(i));
+      ObjectState2D target_pos = trajectories_.at(i).GetState(curr);
 
       true_states_.back().states.push_back(
           std::make_pair(static_cast<TargetIdType>(i), target_pos));
+
+      // Provide metadata if there is any
+      true_states_.back().tangentials.push_back(
+          std::make_pair(static_cast<TargetIdType>(i),
+                         trajectories_.at(i).GetTangentialAt(curr)));
+      true_states_.back().normvecs.push_back(
+          std::make_pair(static_cast<TargetIdType>(i),
+                         trajectories_.at(i).GetNormVecAt(curr)));
     }
   }
 

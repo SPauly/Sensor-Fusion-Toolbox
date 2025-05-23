@@ -79,7 +79,7 @@ class Trajectory {
   /// @param index Timestep index of the object state.
   /// @return ObjectType at the given index. When index is out of bounds, it
   /// returns the last valid state.
-  const ObjectType& GetState(unsigned long long index) const {
+  const ObjectType& GetState(TimeStepIdType index) const {
     if (index >= states_->size()) {
       index = states_->size() - 1;
     }
@@ -89,6 +89,15 @@ class Trajectory {
   /// @brief Returns the number of points in the trajectory.
   /// @return Tragectory size
   inline const unsigned long long GetSize() const { return states_->size(); }
+
+  inline const ObjectPosition2D GetTangentialAt(
+      TimeStepIdType timestamp) const {
+    return object_model_->GetTangentialAt(timestamp);
+  }
+
+  inline const ObjectPosition2D GetNormVecAt(TimeStepIdType timestamp) const {
+    return object_model_->GetNormVecAt(timestamp);
+  }
 
   inline void SetObjectModel(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel) {

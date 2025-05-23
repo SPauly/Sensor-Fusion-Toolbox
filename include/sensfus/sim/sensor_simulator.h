@@ -60,7 +60,7 @@ class SensorSimulator : public internal::SimBase {
 
   /// @brief Returns the current Simulation step
   /// @return Step of the simulation.
-  inline const unsigned long long GetStepIndex() const {
+  inline const TimeStepIdType GetStepIndex() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return curr_index_;
   }
@@ -82,7 +82,7 @@ class SensorSimulator : public internal::SimBase {
   /// @brief Sets the update rate of the simulation. This is the rate at which
   /// the simulation will run.
   /// @param rate_ns Update rate in nanoseconds.
-  void SetUpdateRate(double rate_ns) {
+  void SetUpdateRate(TimeStepIdType rate_ns) {
     std::unique_lock<std::mutex> lock(mtx_);
     update_rate_ = rate_ns;
   }
@@ -91,7 +91,7 @@ class SensorSimulator : public internal::SimBase {
   virtual void RunImpl();
 
  private:
-  double update_rate_;
+  TimeStepIdType update_rate_;
 
   // Flags
   bool start_ = false;  // Flag to indicate if the simulation is running

@@ -41,7 +41,7 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
 
   /// @brief Returns the current Simulation step
   /// @return Step of the simulation.
-  virtual unsigned long long GetStepIndex() const {
+  virtual TimeStepIdType GetStepIndex() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return curr_index_;
   }
@@ -76,7 +76,7 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
 
   // Setters
 
-  void SetStepIndex(unsigned long long step_index) {
+  void SetStepIndex(TimeStepIdType step_index) {
     std::unique_lock<std::mutex> lock(mtx_);
     curr_index_ = step_index;
   }
@@ -129,7 +129,7 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
 
   // Simulation step
   double update_rate_ = 0.0;  // Update rate of the simulation in nanoseconds
-  unsigned long long curr_index_ = 0;  // Current index of the trajectory
+  TimeStepIdType curr_index_ = 0;  // Current index of the trajectory
 
   bool start_ = false;        // Flag to indicate if the simulation is running
   bool should_stop_ = false;  // Flag to indicate if the simulation should stop

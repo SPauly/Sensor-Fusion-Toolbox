@@ -48,7 +48,7 @@ void WafeModel::ApplyToTrajectory(const double time_between_points_ns) {
     state.segment<2>(4) = acceleration;  // acc_x, acc_y
 
     // Calculate metadata like tangential, normal vectors
-    ObjectPosition2D tangential = 1.0 / velocity.norm() * velocity;
+    ObjectPosition2D tangential = (1.0 / velocity.norm()) * velocity;
     ObjectPosition2D normal =
         1 / velocity.norm() *
         (ObjectPosition2D(-velocity[1], velocity[0]));  // Rotate 90 degrees

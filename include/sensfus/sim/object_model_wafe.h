@@ -44,12 +44,14 @@ class WafeModel : public ObjectModelBase<ObjectState2D> {
   /// @param timestamp Time at which the tangent will be returned -> will be
   /// chopped within the wave period
   /// @return Tangential of the velocity
-  inline const ObjectPosition2D GetTangentialAt(const double timestamp) const {
-    return tangentials_.at(static_cast<int>(timestamp) % tangentials_.size());
+  virtual const ObjectPosition2D GetTangentialAt(
+      const TimeStepIdType timestamp) const override {
+    return tangentials_.at(timestamp % tangentials_.size());
   }
 
-  inline const ObjectPosition2D GetNormVecAt(const double timestamp) const {
-    return normvecs_.at(static_cast<int>(timestamp) % normvecs_.size());
+  virtual const ObjectPosition2D GetNormVecAt(
+      const TimeStepIdType timestamp) const override {
+    return normvecs_.at(timestamp % normvecs_.size());
   }
 
  protected:
