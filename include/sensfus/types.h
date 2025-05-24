@@ -1,6 +1,7 @@
 #ifndef SENSFUS_TYPES_H
 #define SENSFUS_TYPES_H
 
+#include <cstddef>
 #include <Eigen/Dense>
 
 namespace sensfus {
@@ -23,6 +24,9 @@ using ObjectVelocity2D = Eigen::Matrix<ScalarType, 2, 1>;  // x_k = (vx, vy)^T
 using ObjectAcceleration2D =
     Eigen::Matrix<ScalarType, 2, 1>;  // x_k = (ax, ay)^T
 
+using Vector2D = Eigen::Matrix<ScalarType, 2, 1>;  // 2D vector type
+using Vector3D = Eigen::Matrix<ScalarType, 3, 1>;  // 3D vector type
+
 using ObjectState3D =
     Eigen::Matrix<ScalarType, 9, 1>;  // x_k = (relative_position^T,
                                       // relative_velocity^T, acceleration^T)^T
@@ -37,7 +41,7 @@ using ObjectAcceleratio3D =
 // -------------------------------------------------------
 
 using TargetIdType = unsigned int;
-using SensorIdType = unsigned int;
+using SensorIdType = size_t;
 
 /// @brief Struct to hold the true target state. This includes the position,
 /// velocity, and acceleration of the target. The ID is used to identify the

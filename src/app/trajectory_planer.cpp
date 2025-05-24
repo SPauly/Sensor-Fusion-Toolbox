@@ -58,6 +58,10 @@ void TrajectoryPlaner::OnUIRender() {
     sim_->PushTrajectory(traj_);
   }
 
+  if (ImGui::Button("Create Wafe Pattern")) {
+    traj_.SetObjectModel(sim::ObjectModelType::WaveModel);
+  }
+
   ImGui::End();
 }
 

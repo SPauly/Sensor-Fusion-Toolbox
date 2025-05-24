@@ -16,7 +16,6 @@ namespace sim {
 /// @tparam ObjectType
 template <typename ObjectType = ObjectState2D>
 class Trajectory {
- public:
   // Ensure ObjectType is either ObjectState2D or ObjectState3D
   static_assert(std::is_same<ObjectType, ObjectState2D>::value ||
                     std::is_same<ObjectType, ObjectState3D>::value,
@@ -24,15 +23,14 @@ class Trajectory {
 
   // Determine the dimension of the object state based on the type
   static constexpr int kDim =
-      std::is_same<ObjectType, ObjectState2D>::value
-          ? 2
-          : (std::is_same<ObjectType, ObjectState3D>::value ? 3 : -1);
+      std::is_same<ObjectType, ObjectState2D>::value ? 2 : 3;
 
   // Type aliases needed
   using RawPosType =
       std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
                          ObjectPosition2D, ObjectPosition3D>;
 
+ public:
   explicit Trajectory(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel)
       : states_(std::make_shared<std::vector<ObjectType>>()),
@@ -43,7 +41,9 @@ class Trajectory {
   explicit Trajectory(
       const std::vector<ObjectType>& points,
       const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : Trajectory(type), states_(points) {}
+      : states_(std::make_shared<std::vector<ObjectType>>(std::move(points))),
+        object_model_(
+            ObjectModelFactory<ObjectType>::CreateObjectModel(type, states_)) {}
   /// @brief Creates a trajectory based on the given points using the underlying
   /// physics model for the target. (This will decide velocity and acceleration
   /// during each point transition.)
@@ -65,11 +65,10 @@ class Trajectory {
     states_->reserve(line_vector.size());
     for (const auto& point : line_vector) {
       ObjectType state;
-      if constexpr (kDim == 2) {
-        state.head<2>() = point;
-      } else if constexpr (kDim == 3) {
-        state.head<3>() = point;
-      }
+      static_assert(
+          ObjectType::RowsAtCompileTime == RawPosType::RowsAtCompileTime * 3,
+          "Dimension mismatch between ObjectType and RawPosType");
+      state.head<kDim>() = point;
       states_->emplace_back(state);
     }
     object_model_->ApplyToTrajectory();
@@ -90,18 +89,19 @@ class Trajectory {
   /// @return Tragectory size
   inline const unsigned long long GetSize() const { return states_->size(); }
 
-  inline const ObjectPosition2D GetTangentialAt(
-      TimeStepIdType timestamp) const {
-    return object_model_->GetTangentialAt(timestamp);
+  inline const RawPosType GetTangentialAt(TimeStepIdType timestamp) const {
+    return static_cast<RawPosType>(object_model_->GetTangentialAt(timestamp));
   }
 
-  inline const ObjectPosition2D GetNormVecAt(TimeStepIdType timestamp) const {
-    return object_model_->GetNormVecAt(timestamp);
+  inline const RawPosType GetNormVecAt(TimeStepIdType timestamp) const {
+    return static_cast<RawPosType>(object_model_->GetNormVecAt(timestamp));
   }
 
   inline void SetObjectModel(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
-    object_model_ = ObjectModelFactory<ObjectType>::CreateObjectModel(type);
+    object_model_ =
+        ObjectModelFactory<ObjectType>::CreateObjectModel(type, states_);
+    object_model_->ApplyToTrajectory();
   }
 
  private:

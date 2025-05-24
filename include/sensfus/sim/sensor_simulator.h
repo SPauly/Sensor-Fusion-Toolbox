@@ -107,8 +107,9 @@ class SensorSimulator : public internal::SimBase {
 
   // Simulation data
   std::vector<Trajectory<ObjectState2D>> trajectories_;
-  std::vector<unsigned long> traj_index_offset_;  // Indices of the trajectories
-  std::vector<TrueTargetState2D> true_states_;    // True target states
+  std::vector<TimeStepIdType>
+      traj_index_offset_;                       // Indices of the trajectories
+  std::vector<TrueTargetState2D> true_states_;  // True target states
 
   // Sensors -> Access to the sensors can be shared with other instances like
   // the gui

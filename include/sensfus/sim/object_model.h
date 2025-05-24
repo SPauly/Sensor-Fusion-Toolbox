@@ -31,7 +31,7 @@ class ObjectModelFactory {
     if (type == ObjectModelType::BasicVelocityModel) {
       return std::make_shared<BasicVelocityModel<ObjectType>>(states);
     } else if (type == ObjectModelType::WaveModel) {
-      return std::make_shared<WaveModel>(states);
+      return std::make_shared<WaveModel<ObjectType>>(states);
     }
     // Add more models as needed
     return nullptr;

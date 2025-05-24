@@ -15,30 +15,30 @@ TEST(TrajectoryTest, ConstructFromLineVector2D) {
 
   ASSERT_EQ(traj.GetSize(), 3);
   auto state0 = traj.GetState(0);
-  EXPECT_FLOAT_EQ(state0(0), 1.0f);
-  EXPECT_FLOAT_EQ(state0(1), 2.0f);
+  EXPECT_DOUBLE_EQ(state0(0), 1.0);
+  EXPECT_DOUBLE_EQ(state0(1), 2.0);
 
   auto state2 = traj.GetState(2);
-  EXPECT_FLOAT_EQ(state2(0), 5.0f);
-  EXPECT_FLOAT_EQ(state2(1), 6.0f);
+  EXPECT_DOUBLE_EQ(state2(0), 5.0);
+  EXPECT_DOUBLE_EQ(state2(1), 6.0);
 }
 
 TEST(TrajectoryTest, ConstructFromLineVector3D) {
-  std::vector<ObjectPosition3D> points = {
-      (ObjectPosition3D() << 1.0, 2.0, 3.0).finished(),
-      (ObjectPosition3D() << 4.0, 5.0, 6.0).finished()};
+  std::vector<ObjectState3D> points = {
+      (ObjectState3D() << 1.0, 2.0, 3.0).finished(),
+      (ObjectState3D() << 4.0, 5.0, 6.0).finished()};
   Trajectory<ObjectState3D> traj(points);
 
   ASSERT_EQ(traj.GetSize(), 2);
   auto state0 = traj.GetState(0);
-  EXPECT_FLOAT_EQ(state0(0), 1.0f);
-  EXPECT_FLOAT_EQ(state0(1), 2.0f);
-  EXPECT_FLOAT_EQ(state0(2), 3.0f);
+  EXPECT_DOUBLE_EQ(state0(0), 1.0);
+  EXPECT_DOUBLE_EQ(state0(1), 2.0);
+  EXPECT_DOUBLE_EQ(state0(2), 3.0);
 
   auto state1 = traj.GetState(1);
-  EXPECT_FLOAT_EQ(state1(0), 4.0f);
-  EXPECT_FLOAT_EQ(state1(1), 5.0f);
-  EXPECT_FLOAT_EQ(state1(2), 6.0f);
+  EXPECT_DOUBLE_EQ(state1(0), 4.0);
+  EXPECT_DOUBLE_EQ(state1(1), 5.0);
+  EXPECT_DOUBLE_EQ(state1(2), 6.0);
 }
 
 TEST(TrajectoryTest, GetStateOutOfBoundsReturnsLast) {
@@ -48,8 +48,8 @@ TEST(TrajectoryTest, GetStateOutOfBoundsReturnsLast) {
   Trajectory<ObjectState2D> traj(points);
 
   auto state = traj.GetState(100);  // Out of bounds
-  EXPECT_FLOAT_EQ(state(0), 3.0f);
-  EXPECT_FLOAT_EQ(state(1), 4.0f);
+  EXPECT_DOUBLE_EQ(state(0), 3.0);
+  EXPECT_DOUBLE_EQ(state(1), 4.0);
 }
 
 TEST(TrajectoryTest, FromLineVectorReplacesStates) {
@@ -64,8 +64,8 @@ TEST(TrajectoryTest, FromLineVectorReplacesStates) {
 
   ASSERT_EQ(traj.GetSize(), 1);
   auto state = traj.GetState(0);
-  EXPECT_FLOAT_EQ(state(0), 7.0f);
-  EXPECT_FLOAT_EQ(state(1), 8.0f);
+  EXPECT_DOUBLE_EQ(state(0), 7.0);
+  EXPECT_DOUBLE_EQ(state(1), 8.0);
 }
 
 }  // namespace sensfus_test

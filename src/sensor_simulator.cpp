@@ -10,6 +10,9 @@
 namespace sensfus {
 namespace sim {
 
+/// TODO: Use explicit template specialization for different object types
+/// to avoid code duplication and improve performance.
+
 SensorSimulator::SensorSimulator() {
   event_bus_ = std::make_shared<utils::EventBus>();
   radar_sensors_ =

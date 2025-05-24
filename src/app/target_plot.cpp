@@ -11,7 +11,8 @@ void TargetPlot::RunControllInterface() {
 
   // Display Target Positions and Velocities
   for (size_t i = 0; i < id_of_target_at_index_.size(); i++) {
-    ImGui::Text("Status Target %f", id_of_target_at_index_.at(i));
+    ImGui::Text("Status Target %f",
+                id_of_target_at_index_.at(static_cast<TargetIdType>(i)));
 
     ImGui::Text("Cartesian Position: x: %f  y: %f", cart_x_.at(i).back(),
                 cart_y_.at(i).back());

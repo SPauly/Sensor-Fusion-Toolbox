@@ -41,42 +41,42 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
 
   /// @brief Returns the current Simulation step
   /// @return Step of the simulation.
-  virtual TimeStepIdType GetStepIndex() const {
+  inline TimeStepIdType GetStepIndex() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return curr_index_;
   }
 
   /// @brief Returns the current Sensor position
   /// @return Position of the sensor in 2D.
-  const ObjectPosition2D GetSensorPosition() const {
+  inline const ObjectPosition2D GetSensorPosition() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return radar_position_;
   }
 
   /// @brief Returns the cartesian standard deviation of the sensor.
   /// @return Standard deviation of the cartesian measurement.
-  const double GetStdCartesianDeviation() const {
+  inline const double GetStdCartesianDeviation() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return cartesian_std_dev_;
   }
 
   /// @brief Returns the standard deviation of the range measurement.
   /// @return Standard deviation of the range measurement.
-  const double GetStdRangeDeviation() const {
+  inline const double GetStdRangeDeviation() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return range_std_dev_;
   }
 
   /// @brief Returns the standard deviation of the azimuth measurement.
   /// @return standard deviation of the azimuth measurement.
-  const double GetStdAzimuthDeviation() const {
+  inline const double GetStdAzimuthDeviation() const {
     std::unique_lock<std::mutex> lock(mtx_);
     return azimuth_std_dev_;
   }
 
   // Setters
 
-  void SetStepIndex(TimeStepIdType step_index) {
+  inline void SetStepIndex(TimeStepIdType step_index) {
     std::unique_lock<std::mutex> lock(mtx_);
     curr_index_ = step_index;
   }
@@ -84,7 +84,7 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
   /// @brief Sets the update rate of the simulation. This is the rate at which
   /// the simulation will run.
   /// @param rate_ns Update rate in nanoseconds.
-  void SetUpdateRate(double rate_ns) {
+  inline void SetUpdateRate(double rate_ns) {
     std::unique_lock<std::mutex> lock(mtx_);
     update_rate_ = rate_ns;
   }
@@ -92,28 +92,28 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
   /// @brief Sets the position of the sensor. This will be taken into account
   /// for range and azimuth but not cartesian coordinates.
   /// @param pos Position of the sensor in 2D.
-  void SetSensorPosition(const ObjectPosition2D& pos) {
+  inline void SetSensorPosition(const ObjectPosition2D& pos) {
     std::unique_lock<std::mutex> lock(mtx_);
     radar_position_ = pos;
   }
 
   /// @brief Sets the standard deviation of the cartesian measurement.
   /// @param std_dev Standard deviation of the cartesian measurement.
-  void SetStdCartesianDeviation(double std_dev) {
+  inline void SetStdCartesianDeviation(double std_dev) {
     std::unique_lock<std::mutex> lock(mtx_);
     cartesian_std_dev_ = std_dev;
   }
 
   /// @brief Sets the standard deviation of the range measurement.
   /// @param std_dev Standard deviation of the range measurement.
-  void SetStdRangeDeviation(double std_dev) {
+  inline void SetStdRangeDeviation(double std_dev) {
     std::unique_lock<std::mutex> lock(mtx_);
     range_std_dev_ = std_dev;
   }
 
   /// @brief Sets the standard deviation of the azimuth measurement.
   /// @param std_dev Standard deviation of the azimuth measurement.
-  virtual void SetStdAzimuthDeviation(double std_dev) {
+  inline void SetStdAzimuthDeviation(double std_dev) {
     std::unique_lock<std::mutex> lock(mtx_);
     azimuth_std_dev_ = std_dev;
   }
