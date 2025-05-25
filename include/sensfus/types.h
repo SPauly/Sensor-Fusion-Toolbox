@@ -57,7 +57,7 @@ struct TrueTargetState2D {
   TimeStepIdType id = 0;
 };
 
-template <typename ObjectType = ObjectState2D>
+template <typename StateType = ObjectState2D>
 struct SensorInfoBase {
   virtual void Clear() {}
 };
@@ -87,35 +87,35 @@ struct RadarSensorInfo2D : public SensorInfoBase<ObjectState2D> {
 /// @brief Wrapper class for ObjectState to provide easier access to its
 /// components. This class allows you to get and set the position, velocity, and
 /// acceleration of an object in a more intuitive way.
-template <typename ObjectType = ObjectState2D>
+template <typename StateType = ObjectState2D>
 class ObjectStateWrapper {
  public:
   explicit ObjectStateWrapper() = default;
-  explicit ObjectStateWrapper(const ObjectType& state) : state_(state) {}
+  explicit ObjectStateWrapper(const StateType& state) : state_(state) {}
   explicit ObjectStateWrapper(const ObjectStateWrapper& other)
       : state_(other.state_) {}
 
-  // Ensure ObjectType is either ObjectState2D or ObjectState3D
-  static_assert(std::is_same<ObjectType, ObjectState2D>::value ||
-                    std::is_same<ObjectType, ObjectState3D>::value,
-                "ObjectType must be ObjectState2D or ObjectState3D");
+  // Ensure StateType is either ObjectState2D or ObjectState3D
+  static_assert(std::is_same<StateType, ObjectState2D>::value ||
+                    std::is_same<StateType, ObjectState3D>::value,
+                "StateType must be ObjectState2D or ObjectState3D");
 
   // Determine the dimension of the object state based on the type
   static constexpr int kDim =
-      std::is_same<ObjectType, ObjectState2D>::value
+      std::is_same<StateType, ObjectState2D>::value
           ? 2
-          : (std::is_same<ObjectType, ObjectState3D>::value ? 3 : -1);
+          : (std::is_same<StateType, ObjectState3D>::value ? 3 : -1);
 
-  // Type aliases for position, velocity, acceleration based on ObjectType
-  using ObjectState = ObjectType;
+  // Type aliases for position, velocity, acceleration based on StateType
+  using ObjectState = StateType;
   using ObjectPosition =
-      std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
+      std::conditional_t<std::is_same<StateType, ObjectState2D>::value,
                          ObjectPosition2D, ObjectPosition3D>;
   using ObjectVelocity =
-      std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
+      std::conditional_t<std::is_same<StateType, ObjectState2D>::value,
                          ObjectVelocity2D, ObjectVelocity3D>;
   using ObjectAcceleration =
-      std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
+      std::conditional_t<std::is_same<StateType, ObjectState2D>::value,
                          ObjectAcceleration2D, ObjectAcceleratio3D>;
 
   ObjectState& GetState() { return state_; }

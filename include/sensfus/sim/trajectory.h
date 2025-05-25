@@ -13,37 +13,37 @@ namespace sensfus {
 namespace sim {
 /// @brief Wrapper to handle creation and access to a trajectory of an object
 /// with a specified state type and physics model.
-/// @tparam ObjectType
-template <typename ObjectType = ObjectState2D>
+/// @tparam StateType
+template <typename StateType = ObjectState2D>
 class Trajectory {
-  // Ensure ObjectType is either ObjectState2D or ObjectState3D
-  static_assert(std::is_same<ObjectType, ObjectState2D>::value ||
-                    std::is_same<ObjectType, ObjectState3D>::value,
-                "ObjectType must be ObjectState2D or ObjectState3D");
+  // Ensure StateType is either ObjectState2D or ObjectState3D
+  static_assert(std::is_same<StateType, ObjectState2D>::value ||
+                    std::is_same<StateType, ObjectState3D>::value,
+                "StateType must be ObjectState2D or ObjectState3D");
 
   // Determine the dimension of the object state based on the type
   static constexpr int kDim =
-      std::is_same<ObjectType, ObjectState2D>::value ? 2 : 3;
+      std::is_same<StateType, ObjectState2D>::value ? 2 : 3;
 
   // Type aliases needed
   using RawPosType =
-      std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
+      std::conditional_t<std::is_same<StateType, ObjectState2D>::value,
                          ObjectPosition2D, ObjectPosition3D>;
 
  public:
   explicit Trajectory(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : states_(std::make_shared<std::vector<ObjectType>>()),
+      : states_(std::make_shared<std::vector<StateType>>()),
         object_model_(
-            ObjectModelFactory<ObjectType>::CreateObjectModel(type, states_)) {}
+            ObjectModelFactory<StateType>::CreateObjectModel(type, states_)) {}
   /// @brief Initializes the trajectory with a vector of states.
   /// @param points precomputed trajectory states.
   explicit Trajectory(
-      const std::vector<ObjectType>& points,
+      const std::vector<StateType>& points,
       const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : states_(std::make_shared<std::vector<ObjectType>>(std::move(points))),
+      : states_(std::make_shared<std::vector<StateType>>(std::move(points))),
         object_model_(
-            ObjectModelFactory<ObjectType>::CreateObjectModel(type, states_)) {}
+            ObjectModelFactory<StateType>::CreateObjectModel(type, states_)) {}
   /// @brief Creates a trajectory based on the given points using the underlying
   /// physics model for the target. (This will decide velocity and acceleration
   /// during each point transition.)
@@ -64,10 +64,10 @@ class Trajectory {
     states_->clear();
     states_->reserve(line_vector.size());
     for (const auto& point : line_vector) {
-      ObjectType state;
+      StateType state;
       static_assert(
-          ObjectType::RowsAtCompileTime == RawPosType::RowsAtCompileTime * 3,
-          "Dimension mismatch between ObjectType and RawPosType");
+          StateType::RowsAtCompileTime == RawPosType::RowsAtCompileTime * 3,
+          "Dimension mismatch between StateType and RawPosType");
       state.head<kDim>() = point;
       states_->emplace_back(state);
     }
@@ -76,9 +76,9 @@ class Trajectory {
 
   /// @brief Returns the object state at the given index.
   /// @param index Timestep index of the object state.
-  /// @return ObjectType at the given index. When index is out of bounds, it
+  /// @return StateType at the given index. When index is out of bounds, it
   /// returns the last valid state.
-  const ObjectType& GetState(TimeStepIdType index) const {
+  const StateType& GetState(TimeStepIdType index) const {
     if (!enable_wrap_around_ && index >= states_->size()) {
       index = states_->size() - 1;
     }
@@ -103,11 +103,11 @@ class Trajectory {
 
   /// @brief Return a copy of the trajectory states.
   /// @return .
-  std::vector<ObjectType> GetStates() const { return std::copy(*states_); }
+  std::vector<StateType> GetStates() const { return std::copy(*states_); }
 
   /// @brief Get shared access to the object model of the trajectory.
   /// @return
-  std::shared_ptr<ObjectModelBase<ObjectType>> GetObjectModel() const {
+  std::shared_ptr<ObjectModelBase<StateType>> GetObjectModel() const {
     return object_model_;
   }
 
@@ -121,7 +121,7 @@ class Trajectory {
       const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
     states_->clear();
     object_model_ =
-        ObjectModelFactory<ObjectType>::CreateObjectModel(type, states_);
+        ObjectModelFactory<StateType>::CreateObjectModel(type, states_);
     object_model_->ApplyToTrajectory();
   }
 
@@ -129,9 +129,9 @@ class Trajectory {
   bool enable_wrap_around_ = false;  // If true, the trajectory will wrap around
                                      // when accessing out of bounds indices.
 
-  std::shared_ptr<std::vector<ObjectType>> states_;
+  std::shared_ptr<std::vector<StateType>> states_;
 
-  std::shared_ptr<ObjectModelBase<ObjectType>> object_model_ = nullptr;
+  std::shared_ptr<ObjectModelBase<StateType>> object_model_ = nullptr;
 };
 
 }  // namespace sim

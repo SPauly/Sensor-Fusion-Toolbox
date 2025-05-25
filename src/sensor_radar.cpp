@@ -96,11 +96,11 @@ void SensorRadar::RunImpl() {
         std::atan2((target_pos(1) - radar_position_(1)),
                    (target_pos(0) - radar_position_(0)));
 
-    temp2 += Eigen::Matrix<ScalarType, 2, 1>(
-        range_std_dev_ *
-            utils::StdNormalGenerator<ScalarType, 1>().sample_raw(),
-        azimuth_std_dev_ *
-            utils::StdNormalGenerator<ScalarType, 1>().sample_raw());
+    temp2 +=
+        Vector2D(range_std_dev_ *
+                     utils::StdNormalGenerator<ScalarType, 1>().sample_raw(),
+                 azimuth_std_dev_ *
+                     utils::StdNormalGenerator<ScalarType, 1>().sample_raw());
 
     sensor_info.range_azimuth.push_back(temp2);
   }
