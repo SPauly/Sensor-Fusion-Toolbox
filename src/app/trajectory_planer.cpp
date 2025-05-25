@@ -52,6 +52,7 @@ void TrajectoryPlaner::OnUIRender() {
   }
 
   if (ImGui::Button("Load")) {
+    traj_.SetObjectModel(sim::ObjectModelType::BasicVelocityModel);
     traj_.FromLineVector(trajectory_);
 
     // Register the trajectory with the simulator

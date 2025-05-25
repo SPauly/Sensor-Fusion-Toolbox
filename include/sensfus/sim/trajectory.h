@@ -6,11 +6,11 @@
 #include <memory>
 
 #include "sensfus/types.h"
+#include "sensfus/utils/math.h"
 #include "sensfus/sim/object_model.h"
 
 namespace sensfus {
 namespace sim {
-
 /// @brief Wrapper to handle creation and access to a trajectory of an object
 /// with a specified state type and physics model.
 /// @tparam ObjectType
@@ -79,15 +79,19 @@ class Trajectory {
   /// @return ObjectType at the given index. When index is out of bounds, it
   /// returns the last valid state.
   const ObjectType& GetState(TimeStepIdType index) const {
-    if (index >= states_->size()) {
+    if (!enable_wrap_around_ && index >= states_->size()) {
       index = states_->size() - 1;
     }
-    return (*states_)[index];
+    return (*states_)[utils::fast_mod(index, states_->size())];
   }
 
   /// @brief Returns the number of points in the trajectory.
   /// @return Tragectory size
-  inline const unsigned long long GetSize() const { return states_->size(); }
+  inline const unsigned long long GetSize() const {
+    if (enable_wrap_around_ && !states_->empty())
+      return -1;  // Simulate infinite trajectory
+    return states_->size();
+  }
 
   inline const RawPosType GetTangentialAt(TimeStepIdType timestamp) const {
     return static_cast<RawPosType>(object_model_->GetTangentialAt(timestamp));
@@ -105,6 +109,9 @@ class Trajectory {
   }
 
  private:
+  bool enable_wrap_around_ = false;  // If true, the trajectory will wrap around
+                                     // when accessing out of bounds indices.
+
   std::shared_ptr<std::vector<ObjectType>> states_;
 
   std::shared_ptr<ObjectModelBase<ObjectType>> object_model_ = nullptr;

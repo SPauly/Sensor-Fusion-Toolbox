@@ -4,6 +4,7 @@
 #include "sensfus/internal/object_model_base.h"
 
 #include "sensfus/types.h"
+#include "sensfus/utils/math.h"
 
 namespace sensfus {
 namespace sim {
@@ -67,7 +68,7 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @return Tangential of the velocity
   inline VecType GetTangentialAt(
       const TimeStepIdType timestamp) const override {
-    return tangentials_.at(timestamp % tangentials_.size());
+    return tangentials_.at(utils::fast_mod(timestamp, tangentials_.size()));
   }
 
   /// @brief Get the normal vector of the current position -> perpendicular to
@@ -76,7 +77,7 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// will be chopped within the wave period
   /// @return Normal vector of the velocity
   inline VecType GetNormVecAt(const TimeStepIdType timestamp) const override {
-    return normvecs_.at(timestamp % normvecs_.size());
+    return normvecs_.at(utils::fast_mod(timestamp, normvecs_.size()));
   }
 
  protected:
