@@ -101,8 +101,25 @@ class Trajectory {
     return static_cast<RawPosType>(object_model_->GetNormVecAt(timestamp));
   }
 
+  /// @brief Return a copy of the trajectory states.
+  /// @return .
+  std::vector<ObjectType> GetStates() const { return std::copy(*states_); }
+
+  /// @brief Get shared access to the object model of the trajectory.
+  /// @return
+  std::shared_ptr<ObjectModelBase<ObjectType>> GetObjectModel() const {
+    return object_model_;
+  }
+
+  // Setters
+
+  /// @brief Sets a new object model for the trajectory. This will clear the
+  /// former trajectory data and apply the new model to the current states.
+  /// @param type Type of the object model to set. must be one of the
+  /// ObjectModelType enum values.
   inline void SetObjectModel(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
+    states_->clear();
     object_model_ =
         ObjectModelFactory<ObjectType>::CreateObjectModel(type, states_);
     object_model_->ApplyToTrajectory();
