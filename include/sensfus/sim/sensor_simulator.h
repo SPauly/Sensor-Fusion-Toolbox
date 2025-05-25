@@ -40,14 +40,16 @@ class SensorSimulator : public internal::SimBase {
   /// @return New Sensor that was added
   /// TODO: make a version that can set the size etc. immediately
   virtual std::shared_ptr<SensorRadar> AddRadarSensor() {
-    radar_sensors_->push_back(
-        std::make_shared<SensorRadar>(radar_sensors_->size(), event_bus_));
-    return radar_sensors_->back();
+    std::unique_lock<std::mutex> lock(mtx_);
+    radar_sensors_.push_back(
+        std::make_shared<SensorRadar>(radar_sensors_.size(), event_bus_));
+    return radar_sensors_.back();
   }
 
   // Getters
 
   inline const std::shared_ptr<utils::EventBus> GetEventBus() const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return event_bus_;
   }
 
@@ -72,8 +74,9 @@ class SensorSimulator : public internal::SimBase {
     return trajectories_.size();
   }
 
-  inline const std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>>
-  GetRadarSensors() const {
+  inline const std::vector<std::shared_ptr<SensorRadar>> GetRadarSensors()
+      const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return radar_sensors_;
   }
 
@@ -91,7 +94,7 @@ class SensorSimulator : public internal::SimBase {
   virtual void RunImpl();
 
  private:
-  TimeStepIdType update_rate_;
+  TimeStepIdType update_rate_, glob_sensor_update_rate_;
 
   // Flags
   bool start_ = false;  // Flag to indicate if the simulation is running
@@ -107,13 +110,14 @@ class SensorSimulator : public internal::SimBase {
 
   // Simulation data
   std::vector<Trajectory<ObjectState2D>> trajectories_;
-  std::vector<TimeStepIdType>
-      traj_index_offset_;                       // Indices of the trajectories
+  std::vector<Trajectory<ObjectState3D>> trajectories_3d_;
+  std::vector<TimeStepIdType> traj_index_offset_, traj_index_offset_3d_;
+
   std::vector<TrueTargetState2D> true_states_;  // True target states
 
-  // Sensors -> Access to the sensors can be shared with other instances like
-  // the gui
-  std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>> radar_sensors_;
+  // Store the sensors separately (so not as their base) to handle different
+  // behaviors and for ease of use.
+  std::vector<std::shared_ptr<SensorRadar>> radar_sensors_;
 
   // Event bus for communication
   std::shared_ptr<utils::EventBus> event_bus_;
