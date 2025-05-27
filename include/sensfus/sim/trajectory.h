@@ -45,19 +45,16 @@ class Trajectory {
   /// former trajectory data and apply the new model to the current states.
   /// @param type Type of the object model to set. must be one of the
   /// ObjectModelType enum values.
-  virtual void SetObjectModel(
+  /// @return The shared_ptr returned only guarantees access to this trajectory
+  /// until the next SetObjectModel is called. This can happen from another
+  /// thread. To verify if the objectmodel is active call IsActive().
+  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase> SetObjectModel(
       const ObjectModelType type = ObjectModelType::BasicVelocityModel) = 0;
 
-  /// @brief
+  /// @brief This will set the trajectory on repeat until EnableWrapAround is
+  /// set to false again
+  /// @param wrap Set to true to enable wrap around
   virtual void SetEnableWrapAround(bool wrap = true) = 0;
-
- private:
-  bool enable_wrap_around_ = false;  // If true, the trajectory will wrap around
-                                     // when accessing out of bounds indices.
-
-  std::shared_ptr<std::vector<StateType>> states_;
-
-  std::shared_ptr<ObjectModelBase<StateType>> object_model_ = nullptr;
 };
 
 }  // namespace sim

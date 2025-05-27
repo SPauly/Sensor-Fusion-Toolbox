@@ -9,6 +9,7 @@
 #include "sensfus/types.h"
 #include "sensfus/utils/math.h"
 #include "sensfus/sim/object_model.h"
+#include "sensfus/sim/trajectory.h"
 
 namespace sensfus {
 namespace internal {
@@ -17,7 +18,7 @@ namespace internal {
 /// with a specified state type and physics model.
 /// @tparam StateType
 template <typename StateType = ObjectState2D>
-class TrajectoryImpl {
+class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
   // Ensure StateType is either ObjectState2D or ObjectState3D
   static_assert(std::is_same<StateType, ObjectState2D>::value ||
                     std::is_same<StateType, ObjectState3D>::value,
@@ -63,6 +64,7 @@ class TrajectoryImpl {
   /// during each point transition.)
   /// @param line_vector Vector of 2D or 3D points representing the trajectory.
   void FromLineVector(const std::vector<RawPosType>& line_vector) {
+    std::unique_lock<std::mutex> lock(mtx_);
     states_->clear();
     states_->reserve(line_vector.size());
     for (const auto& point : line_vector) {
@@ -81,6 +83,8 @@ class TrajectoryImpl {
   /// @return StateType at the given index. When index is out of bounds, it
   /// returns the last valid state.
   const StateType& GetState(TimeStepIdType index) const {
+    std::unique_lock<std::mutex> lock(mtx_);
+
     if (!enable_wrap_around_ && index >= states_->size()) {
       index = states_->size() - 1;
     }
@@ -89,27 +93,34 @@ class TrajectoryImpl {
 
   /// @brief Returns the number of points in the trajectory.
   /// @return Tragectory size
-  inline const unsigned long long GetSize() const {
+  virtual const TimeStepIdType GetSize() const override {
+    std::unique_lock<std::mutex> lock(mtx_);
     if (enable_wrap_around_ && !states_->empty())
       return -1;  // Simulate infinite trajectory
     return states_->size();
   }
 
   inline const RawPosType GetTangentialAt(TimeStepIdType timestamp) const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return static_cast<RawPosType>(object_model_->GetTangentialAt(timestamp));
   }
 
   inline const RawPosType GetNormVecAt(TimeStepIdType timestamp) const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return static_cast<RawPosType>(object_model_->GetNormVecAt(timestamp));
   }
 
   /// @brief Return a copy of the trajectory states.
   /// @return .
-  std::vector<StateType> GetStates() const { return std::copy(*states_); }
+  std::vector<StateType> GetStates() const {
+    std::unique_lock<std::mutex> lock(mtx_);
+    return std::copy(*states_);
+  }
 
   /// @brief Get shared access to the object model of the trajectory.
   /// @return
   std::shared_ptr<ObjectModelBase<StateType>> GetObjectModel() const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return object_model_;
   }
 
@@ -119,15 +130,37 @@ class TrajectoryImpl {
   /// former trajectory data and apply the new model to the current states.
   /// @param type Type of the object model to set. must be one of the
   /// ObjectModelType enum values.
-  inline void SetObjectModel(
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
+  /// @return The shared_ptr returned only guarantees access to this trajectory
+  /// until the next SetObjectModel is called. This can happen from another
+  /// thread. To verify if the objectmodel is active call IsActive().
+  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase> SetObjectModel(
+      const ObjectModelType type =
+          ObjectModelType::BasicVelocityModel) override {
+    std::unique_lock<std::mutex> lock(mtx_);
+
     states_->clear();
+    // deactivate the old model
+    object_model_->SetIsActive(false);
+
     object_model_ =
         ObjectModelFactory<StateType>::CreateObjectModel(type, states_);
     object_model_->ApplyToTrajectory();
+
+    // set object model to be the active one
+    object_model_->SetIsActive(true);
+  }
+
+  /// @brief This will set the trajectory on repeat until EnableWrapAround is
+  /// set to false again
+  /// @param wrap Set to true to enable wrap around
+  virtual void SetEnableWrapAround(bool wrap = true) override {
+    std::unique_lock<std::mutex> lock(mtx_);
+    enable_wrap_around_ = wrap;
   }
 
  private:
+  mutable std::mutex mtx_;
+
   bool enable_wrap_around_ = false;  // If true, the trajectory will wrap around
                                      // when accessing out of bounds indices.
 

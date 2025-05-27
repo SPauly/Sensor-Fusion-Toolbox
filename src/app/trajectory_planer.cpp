@@ -56,12 +56,12 @@ void TrajectoryPlaner::OnUIRender() {
     traj_.FromLineVector(trajectory_);
 
     // Register the trajectory with the simulator
-    sim_->PushTrajectory(traj_);
+    sim_->CreateTrajectoryFromVec2D(traj_);
   }
 
   if (ImGui::Button("Create Wafe Pattern")) {
     traj_.SetObjectModel(sim::ObjectModelType::WaveModel);
-    sim_->PushTrajectory(traj_);
+    sim_->CreateTrajectoryFromVec2D(traj_);
   }
 
   ImGui::End();

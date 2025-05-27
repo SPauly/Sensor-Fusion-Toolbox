@@ -9,10 +9,13 @@
 
 namespace sensfus {
 namespace sim {
+class SensorSimulator;
+template <typename StateType = ObjectState2D>
+class TrajectoryImpl;
 
-/// @brief Physics model for the object. This class is used to apply the physics
-/// model to trajectories or calculate current position based on the time
-/// passed.
+/// @brief Physics model for the object. This class is used to apply the
+/// physics model to trajectories or calculate current position based on the
+/// time passed.
 /// @tparam StateType
 template <typename StateType = ObjectState2D>
 class ObjectModelBase {
@@ -22,6 +25,10 @@ class ObjectModelBase {
                 "StateType must be ObjectState2D or ObjectState3D");
 
  protected:
+  // Allow these classes access to changing the active state
+  friend class SensorSimulator;
+  friend class TrajectoryImpl<StateType>;
+
   // Type alias for used position type based on the dimension of the state
   static constexpr int kDim =
       std::is_same<StateType, ObjectState2D>::value ? 2 : 3;
@@ -50,11 +57,24 @@ class ObjectModelBase {
   }
 
   // Getters
+  /// @brief Active state of the model
+  /// @return true if tied to a Trajectory
+  bool IsActive() const { return is_active_; }
+
+ protected:
+  /// @brief Set the active state of the Model -> used to indicate that this
+  /// object is tied to an active trajectory
+  /// @param active true for 'is tied to trajectory'
+  /// @return IsActive
+  bool SetIsActive(bool active = true) { return is_active_ = active; }
 
   virtual VecType GetTangentialAt(const TimeStepIdType timestamp) const = 0;
   virtual VecType GetNormVecAt(const TimeStepIdType timestamp) const = 0;
 
  protected:
+  bool is_active_ =
+      true;  // Indicate wether this is tied to an active trajectory
+
   double time_between_points_ns_ = 50000.0;  // Time between points in ns
   std::shared_ptr<std::vector<StateType>> states_ = nullptr;
 };
