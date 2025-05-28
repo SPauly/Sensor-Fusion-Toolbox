@@ -3,6 +3,8 @@
 
 #include "sensfus/internal/object_model_base.h"
 
+#include <mutex>
+
 #include "sensfus/types.h"
 #include "sensfus/utils/math.h"
 
@@ -41,16 +43,14 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @brief Populates the states with target positions, velocities,
   /// acceleration, tangentials and normalvectors based on the provided sampling
   /// rate
-  /// @param time_between_points_ns Time between each simulation step. This
-  /// essentialy determines the sample rate
-  virtual void ApplyToTrajectory(
-      const double time_between_points_ns = 50000.0) override;
+  virtual void ApplyToTrajectory() override;
 
   // Setters
 
   /// @brief Sets the speed of the object in m/s.
   /// @param speed_ms Speed in m/s.
   inline void SetSpeed(const double speed_ms) {
+    std::unique_lock<std::mutex> lock(mtx_);
     speed_ms_ = speed_ms;
     RecalculateParams();
   }
@@ -58,16 +58,19 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @brief Sets the acceleration of the object in m/s^2.
   /// @param acceleration_ms2 Acceleration in m/s^2.
   inline void SetAcceleration(const double acceleration_ms2) {
+    std::unique_lock<std::mutex> lock(mtx_);
     acceleration_ms2_ = acceleration_ms2;
     RecalculateParams();
   }
 
+ protected:
   /// @brief Get the tangential of the current position -> velocity direction
   /// @param timestamp Time at which the tangent will be returned -> will be
   /// chopped within the wave period
   /// @return Tangential of the velocity
-  inline VecType GetTangentialAt(
+  virtual VecType GetTangentialAtImpl(
       const TimeStepIdType timestamp) const override {
+    std::unique_lock<std::mutex> lock(mtx_);
     return tangentials_.at(utils::fast_mod(timestamp, tangentials_.size()));
   }
 
@@ -76,17 +79,19 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @param timestamp Time at which the normal vector will be returned ->
   /// will be chopped within the wave period
   /// @return Normal vector of the velocity
-  inline VecType GetNormVecAt(const TimeStepIdType timestamp) const override {
+  virtual VecType GetNormVecAtImpl(
+      const TimeStepIdType timestamp) const override {
+    std::unique_lock<std::mutex> lock(mtx_);
     return normvecs_.at(utils::fast_mod(timestamp, normvecs_.size()));
   }
 
- protected:
   inline void RecalculateParams() {
     omega_ = acceleration_ms2_ / 2 * speed_ms_;                // w = q/2 * v
     amplitude_ = (speed_ms_ * speed_ms_) / acceleration_ms2_;  // A = v^2/q
   }
 
  private:
+  mutable std::mutex mtx_;
   std::vector<VecType> tangentials_, normvecs_;
 
   double speed_ms_ = 300.0;        // Speed in m/s
