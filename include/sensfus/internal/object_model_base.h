@@ -91,11 +91,14 @@ class ObjectModelBase {
     static_assert(
         "Don't call GetTangentialImpl from non specialized ObjectModelType -> "
         "convert to needed spezialisation first");
+
+    return VecType();
   }
   virtual VecType GetNormVecAtImpl(const TimeStepIdType timestamp) const {
     static_assert(
         "Don't call GetNormVecAtImpl from non specialized ObjectModelType -> "
         "convert to needed spezialisation first");
+    return VecType();
   }
 
  protected:

@@ -35,7 +35,7 @@ class TrajectoryPlaner : public utils::Layer {
 
   // Simulation data
   std::shared_ptr<sim::SensorSimulator> sim_;
-  sim::Trajectory<ObjectState2D> traj_;
+  std::vector<std::shared_ptr<sim::Trajectory<ObjectState2D>>> traj_;
 };
 
 }  // namespace app

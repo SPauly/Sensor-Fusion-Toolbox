@@ -162,6 +162,9 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     object_model_->SetIsActive(true);
 
     type_ = type;
+
+    return std::static_pointer_cast<sim::ObjectModelBase<StateType>>(
+        object_model_);
   }
 
   /// @brief This will set the trajectory on repeat until EnableWrapAround is
