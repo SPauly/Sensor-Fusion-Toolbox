@@ -8,11 +8,10 @@
 
 #include "sensfus/types.h"
 #include "sensfus/utils/math.h"
+#include "sensfus/sim/object_model.h"
 
 namespace sensfus {
 namespace sim {
-// Forward declarations
-class SensorSimulator;
 
 /// @brief Wrapper to handle creation and access to a trajectory of an object
 /// with a specified state type and physics model.
@@ -24,20 +23,23 @@ class Trajectory {
                     std::is_same<StateType, ObjectState3D>::value,
                 "StateType must be ObjectState2D or ObjectState3D");
 
-  // Only allow creation by the SensorSimulator
-  friend class SensorSimulator;
-  explicit Trajectory() = default;
-
  public:
+  // This should only be called by SensorSimulator. Otherwise it is not assigned
+  // to a simulator
+  explicit Trajectory() = default;
   virtual ~Trajectory() = default;
+
+  /// TODO: Make it non-copyable, non-movable
 
   /// @brief Returns the number of points in the trajectory.
   /// @return Tragectory size
-  virtual const TimeStepIdType GetSize() const = 0;
+  virtual const TimeStepIdType GetSize() const { return 0; }
 
   /// @brief Returns the underlying ModelType of the trajectory
   /// @return Of type sim::ObjectModelType
-  virtual const ObjectModelType GetObjectModelType() const = 0;
+  virtual const ObjectModelType GetObjectModelType() const {
+    return sim::ObjectModelType::BasicVelocityModel;
+  }
 
   // Setters
 
@@ -48,13 +50,16 @@ class Trajectory {
   /// @return The shared_ptr returned only guarantees access to this trajectory
   /// until the next SetObjectModel is called. This can happen from another
   /// thread. To verify if the objectmodel is active call IsActive().
-  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase> SetObjectModel(
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel) = 0;
+  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase<StateType>>
+  SetObjectModel(
+      const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
+    return nullptr;
+  }
 
   /// @brief This will set the trajectory on repeat until EnableWrapAround is
   /// set to false again
   /// @param wrap Set to true to enable wrap around
-  virtual void SetEnableWrapAround(bool wrap = true) = 0;
+  virtual void SetEnableWrapAround(bool wrap = true) {}
 };
 
 }  // namespace sim

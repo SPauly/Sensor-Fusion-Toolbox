@@ -8,10 +8,12 @@
 #include "sensfus/types.h"
 
 namespace sensfus {
+namespace internal {
+template <typename StateType>
+class TrajectoryImpl;
+}
 namespace sim {
 class SensorSimulator;
-template <typename StateType = ObjectState2D>
-class TrajectoryImpl;
 
 /// @brief Physics model for the object. This class is used to apply the
 /// physics model to trajectories or calculate current position based on the
@@ -27,7 +29,7 @@ class ObjectModelBase {
  protected:
   // Allow these classes access to changing the active state
   friend class SensorSimulator;
-  friend class TrajectoryImpl<StateType>;
+  friend class internal::TrajectoryImpl<StateType>;
 
   // Type alias for used position type based on the dimension of the state
   static constexpr int kDim =
@@ -46,7 +48,11 @@ class ObjectModelBase {
   /// underlying physics model. (Applies velocity and acceleration to each
   /// point). Can alter the position of the trajectory points if they do not
   /// match the physics model.
-  virtual void ApplyToTrajectory() = 0;
+  virtual void ApplyToTrajectory() {
+    static_assert(
+        "Don't call ApplyToTrajectory from non specialized ObjectModelType -> "
+        "convert to needed spezialisation first");
+  }
 
   /// @brief Sets the time that passes between each point in the trajectory.
   /// @param time_between_points_ns time in nanoseconds.
@@ -81,8 +87,16 @@ class ObjectModelBase {
     return GetNormVecAtImpl(timestamp);
   }
 
-  virtual VecType GetTangentialAtImpl(const TimeStepIdType timestamp) const = 0;
-  virtual VecType GetNormVecAtImpl(const TimeStepIdType timestamp) const = 0;
+  virtual VecType GetTangentialAtImpl(const TimeStepIdType timestamp) const {
+    static_assert(
+        "Don't call GetTangentialImpl from non specialized ObjectModelType -> "
+        "convert to needed spezialisation first");
+  }
+  virtual VecType GetNormVecAtImpl(const TimeStepIdType timestamp) const {
+    static_assert(
+        "Don't call GetNormVecAtImpl from non specialized ObjectModelType -> "
+        "convert to needed spezialisation first");
+  }
 
  protected:
   mutable std::mutex mtx_;
@@ -105,6 +119,10 @@ class BasicVelocityModel : public ObjectModelBase<StateType> {
                 "StateType must be ObjectState2D or ObjectState3D");
 
   using VecType = typename ObjectModelBase<StateType>::VecType;
+
+  // Allow these classes access to changing the active state
+  friend class SensorSimulator;
+  friend class internal::TrajectoryImpl<StateType>;
 
  public:
   explicit BasicVelocityModel(std::shared_ptr<std::vector<StateType>> states)

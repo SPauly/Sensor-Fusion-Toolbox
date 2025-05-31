@@ -34,26 +34,26 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
                          ObjectPosition2D, ObjectPosition3D>;
 
  public:
-  explicit TrajectoryImpl(
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel)
+  explicit TrajectoryImpl(const sim::ObjectModelType type =
+                              sim::ObjectModelType::BasicVelocityModel)
       : states_(std::make_shared<std::vector<StateType>>()),
-        object_model_(
-            ObjectModelFactory<StateType>::CreateObjectModel(type, states_)) {}
+        object_model_(sim::ObjectModelFactory<StateType>::CreateObjectModel(
+            type, states_)) {}
   /// @brief Initializes the trajectory with a vector of states.
   /// @param points precomputed trajectory states.
-  explicit TrajectoryImpl(
-      const std::vector<StateType>& points,
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel)
+  explicit TrajectoryImpl(const std::vector<StateType>& points,
+                          const sim::ObjectModelType type =
+                              sim::ObjectModelType::BasicVelocityModel)
       : states_(std::make_shared<std::vector<StateType>>(std::move(points))),
-        object_model_(
-            ObjectModelFactory<StateType>::CreateObjectModel(type, states_)) {}
+        object_model_(sim::ObjectModelFactory<StateType>::CreateObjectModel(
+            type, states_)) {}
   /// @brief Creates a trajectory based on the given points using the underlying
   /// physics model for the target. (This will decide velocity and acceleration
   /// during each point transition.)
   /// @param line_vector Vector of 2D or 3D points representing the trajectory.
-  explicit TrajectoryImpl(
-      const std::vector<RawPosType>& line_vector,
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel)
+  explicit TrajectoryImpl(const std::vector<RawPosType>& line_vector,
+                          const sim::ObjectModelType type =
+                              sim::ObjectModelType::BasicVelocityModel)
       : TrajectoryImpl(type) {
     FromLineVector(line_vector);
   }
@@ -91,13 +91,13 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     return (*states_)[utils::fast_mod(index, states_->size())];
   }
 
-  /// @brief Returns the number of points in the trajectory.
-  /// @return Tragectory size
-  virtual const TimeStepIdType GetSize() const override {
+  /// @brief Get shared access to the object model of the trajectory.
+  /// @return Shared Pointer to the model base. Get the type to interpret it
+  /// properly
+  virtual std::shared_ptr<sim::ObjectModelBase<StateType>> GetObjectModel()
+      const {
     std::unique_lock<std::mutex> lock(mtx_);
-    if (enable_wrap_around_ && !states_->empty())
-      return -1;  // Simulate infinite trajectory
-    return states_->size();
+    return object_model_;
   }
 
   inline const RawPosType GetTangentialAt(TimeStepIdType timestamp) const {
@@ -117,11 +117,23 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     return std::copy(*states_);
   }
 
-  /// @brief Get shared access to the object model of the trajectory.
-  /// @return
-  std::shared_ptr<ObjectModelBase<StateType>> GetObjectModel() const {
+  // Implement Functions from the client interface here
+  //------------------------------------------------------
+
+  /// @brief Returns the number of points in the trajectory.
+  /// @return Tragectory size
+  virtual const TimeStepIdType GetSize() const override {
     std::unique_lock<std::mutex> lock(mtx_);
-    return object_model_;
+    if (enable_wrap_around_ && !states_->empty())
+      return -1;  // Simulate infinite trajectory
+    return states_->size();
+  }
+
+  /// @brief Returns the underlying ModelType of the trajectory
+  /// @return Of type sim::ObjectModelType
+  virtual const sim::ObjectModelType GetObjectModelType() const override {
+    std::unique_lock<std::mutex> lock(mtx_);
+    return type_;
   }
 
   // Setters
@@ -133,9 +145,9 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
   /// @return The shared_ptr returned only guarantees access to this trajectory
   /// until the next SetObjectModel is called. This can happen from another
   /// thread. To verify if the objectmodel is active call IsActive().
-  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase> SetObjectModel(
-      const ObjectModelType type =
-          ObjectModelType::BasicVelocityModel) override {
+  [[nodiscard]] virtual std::shared_ptr<sim::ObjectModelBase<StateType>>
+  SetObjectModel(const sim::ObjectModelType type =
+                     sim::ObjectModelType::BasicVelocityModel) override {
     std::unique_lock<std::mutex> lock(mtx_);
 
     states_->clear();
@@ -143,11 +155,13 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     object_model_->SetIsActive(false);
 
     object_model_ =
-        ObjectModelFactory<StateType>::CreateObjectModel(type, states_);
+        sim::ObjectModelFactory<StateType>::CreateObjectModel(type, states_);
     object_model_->ApplyToTrajectory();
 
     // set object model to be the active one
     object_model_->SetIsActive(true);
+
+    type_ = type;
   }
 
   /// @brief This will set the trajectory on repeat until EnableWrapAround is
@@ -166,7 +180,8 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
 
   std::shared_ptr<std::vector<StateType>> states_;
 
-  std::shared_ptr<ObjectModelBase<StateType>> object_model_ = nullptr;
+  std::shared_ptr<sim::ObjectModelBase<StateType>> object_model_ = nullptr;
+  sim::ObjectModelType type_;
 };
 
 }  // namespace internal
