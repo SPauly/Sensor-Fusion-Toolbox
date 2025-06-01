@@ -18,20 +18,20 @@ enum class ObjectModelType {
 
 /// @brief Creates the object model based on the given type. This class is a
 /// factory method.
-/// @tparam ObjectType 2D or 3D object state.
-template <typename ObjectType = ObjectState2D>
+/// @tparam StateType 2D or 3D object state.
+template <typename StateType = ObjectState2D>
 class ObjectModelFactory {
  public:
   /// @brief Creates an object model based on the given type.
   /// @param type Type of the object model.
   /// @return Pointer to the created object model.
-  static std::shared_ptr<ObjectModelBase<ObjectType>> CreateObjectModel(
+  static std::shared_ptr<ObjectModelBase<StateType>> CreateObjectModel(
       const ObjectModelType type,
-      std::shared_ptr<std::vector<ObjectType>> states) {
+      std::shared_ptr<std::vector<StateType>> states) {
     if (type == ObjectModelType::BasicVelocityModel) {
-      return std::make_shared<BasicVelocityModel<ObjectType>>(states);
+      return std::make_shared<BasicVelocityModel<StateType>>(states);
     } else if (type == ObjectModelType::WaveModel) {
-      return std::make_shared<WaveModel<ObjectType>>(states);
+      return std::make_shared<WaveModel<StateType>>(states);
     }
     // Add more models as needed
     return nullptr;

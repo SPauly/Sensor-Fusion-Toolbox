@@ -12,6 +12,7 @@
 #include "sensfus/sim/sensor_radar.h"
 #include "sensfus/sim/object_model.h"
 #include "sensfus/sim/trajectory.h"
+#include "sensfus/internal/trajectory_impl.h"
 
 namespace sensfus {
 namespace sim {
@@ -28,26 +29,37 @@ class SensorSimulator : public internal::SimBase {
   /// @brief Pushes a trajectory to the simulation. This trajectory will be used
   /// to simulate the sensor data.
   /// @param traj Trajectory will be started with the next simulation step.
-  virtual void PushTrajectory(const Trajectory<ObjectState2D>& traj) {
+  [[nodiscard]] std::shared_ptr<Trajectory<ObjectState2D>>
+  CreateTrajectoryFromVec2D(
+      const std::vector<Vector2D>& line_vector,
+      const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
     std::unique_lock<std::mutex> lock(mtx_);
-    trajectories_.push_back(traj);
+
+    trajectories_.push_back(
+        std::make_shared<internal::TrajectoryImpl<ObjectState2D>>(line_vector,
+                                                                  type));
 
     // store the index offset of the trajectory
     traj_index_offset_.push_back(curr_index_);
+
+    return std::static_pointer_cast<Trajectory<ObjectState2D>>(
+        trajectories_.back());
   }
 
   /// @brief Adds another sensor to the simulation but does not start it.
   /// @return New Sensor that was added
   /// TODO: make a version that can set the size etc. immediately
   virtual std::shared_ptr<SensorRadar> AddRadarSensor() {
-    radar_sensors_->push_back(
-        std::make_shared<SensorRadar>(radar_sensors_->size(), event_bus_));
-    return radar_sensors_->back();
+    std::unique_lock<std::mutex> lock(mtx_);
+    radar_sensors_.push_back(
+        std::make_shared<SensorRadar>(radar_sensors_.size(), event_bus_));
+    return radar_sensors_.back();
   }
 
   // Getters
 
   inline const std::shared_ptr<utils::EventBus> GetEventBus() const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return event_bus_;
   }
 
@@ -72,8 +84,9 @@ class SensorSimulator : public internal::SimBase {
     return trajectories_.size();
   }
 
-  inline const std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>>
-  GetRadarSensors() const {
+  inline const std::vector<std::shared_ptr<SensorRadar>> GetRadarSensors()
+      const {
+    std::unique_lock<std::mutex> lock(mtx_);
     return radar_sensors_;
   }
 
@@ -91,7 +104,7 @@ class SensorSimulator : public internal::SimBase {
   virtual void RunImpl();
 
  private:
-  TimeStepIdType update_rate_;
+  TimeStepIdType update_rate_, glob_sensor_update_rate_;
 
   // Flags
   bool start_ = false;  // Flag to indicate if the simulation is running
@@ -106,14 +119,17 @@ class SensorSimulator : public internal::SimBase {
   mutable std::mutex mtx_;
 
   // Simulation data
-  std::vector<Trajectory<ObjectState2D>> trajectories_;
-  std::vector<TimeStepIdType>
-      traj_index_offset_;                       // Indices of the trajectories
+  std::vector<std::shared_ptr<internal::TrajectoryImpl<ObjectState2D>>>
+      trajectories_;
+  std::vector<std::shared_ptr<internal::TrajectoryImpl<ObjectState3D>>>
+      trajectories_3d_;
+  std::vector<TimeStepIdType> traj_index_offset_, traj_index_offset_3d_;
+
   std::vector<TrueTargetState2D> true_states_;  // True target states
 
-  // Sensors -> Access to the sensors can be shared with other instances like
-  // the gui
-  std::shared_ptr<std::vector<std::shared_ptr<SensorRadar>>> radar_sensors_;
+  // Store the sensors separately (so not as their base) to handle different
+  // behaviors and for ease of use.
+  std::vector<std::shared_ptr<SensorRadar>> radar_sensors_;
 
   // Event bus for communication
   std::shared_ptr<utils::EventBus> event_bus_;

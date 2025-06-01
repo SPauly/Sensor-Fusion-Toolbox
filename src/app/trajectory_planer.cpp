@@ -46,21 +46,19 @@ void TrajectoryPlaner::OnUIRender() {
   }
 
   ImGui::Text("Saved Trajectory Points: %d", (int)trajectory_.size());
-  ImGui::Text("Loaded Points: %d", (int)traj_.GetSize());
+  if (traj_.size() > 0)
+    ImGui::Text("Loaded Points: %d", (int)traj_.back()->GetSize());
   if (ImGui::Button("Clear")) {
     trajectory_.clear();
   }
 
   if (ImGui::Button("Load")) {
-    traj_.FromLineVector(trajectory_);
-
-    // Register the trajectory with the simulator
-    sim_->PushTrajectory(traj_);
+    traj_.push_back(sim_->CreateTrajectoryFromVec2D(trajectory_));
   }
 
   if (ImGui::Button("Create Wafe Pattern")) {
-    traj_.SetObjectModel(sim::ObjectModelType::WaveModel);
-    sim_->PushTrajectory(traj_);
+    traj_.push_back(sim_->CreateTrajectoryFromVec2D(
+        trajectory_, sim::ObjectModelType::WaveModel));
   }
 
   ImGui::End();

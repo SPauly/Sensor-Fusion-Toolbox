@@ -5,21 +5,20 @@
 
 #include <cmath>
 
-#define M_PI 3.14159265358979323846
-
 namespace sensfus {
 namespace sim {
 
 template <typename StateType>
-void WaveModel<StateType>::ApplyToTrajectory(
-    const double time_between_points_ns) {
+void WaveModel<StateType>::ApplyToTrajectory() {
+  std::unique_lock<std::mutex> lock(mtx_);
+
   // First calculate the period of the wave
   const double period = 2 * M_PI / omega_;  // Period in seconds
 
   // Calculate the number of points in the trajectory based on the sampling rate
   // and Wave period
   const double sampling_rate =
-      time_between_points_ns / 1e9;  // Convert ns to seconds
+      time_between_points_ns_ / 1e9;  // Convert ns to seconds
   const unsigned long long num_points =
       static_cast<unsigned long long>(std::ceil(period / sampling_rate));
 
