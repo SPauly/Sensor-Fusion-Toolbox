@@ -59,9 +59,11 @@ class ObjectModelBase {
   inline void SetTimeBetweenPointsNs(const double time_between_points_ns) {
     std::unique_lock<std::mutex> lock(mtx_);
     time_between_points_ns_ = time_between_points_ns;
+  }
 
-    lock.unlock();
-    ApplyToTrajectory();
+  inline TimeStepIdType GetTimeBetweenPointsNs() const {
+    std::unique_lock<std::mutex> lock(mtx_);
+    return time_between_points_ns_;
   }
 
   // Getters

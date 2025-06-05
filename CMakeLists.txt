@@ -85,6 +85,8 @@ target_link_libraries(SensorSimulator PRIVATE
 # Setup Tests
 #---------------------------------#
 
+if(BUILD_TESTS)
+
 # Fetch google test
 FetchContent_Declare(
   googletest
@@ -128,3 +130,5 @@ foreach(target ${SINGLE_FILE_TESTS})
   target_link_libraries(${target} GTest::gtest_main Eigen3::Eigen senssimlib) 
   gtest_discover_tests(${target})
 endforeach()
+
+endif() # BUILD_TESTS

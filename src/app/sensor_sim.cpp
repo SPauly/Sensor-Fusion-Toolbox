@@ -247,10 +247,14 @@ void SensorSim::SensorControl() {
   if (ImGui::Begin("Sensor Control")) {
     ImGui::Text("Sensor Control Window");
     static float update_time_ms = 100.0f;  // Default 100 ms
-    ImGui::SliderFloat("Update Time (ms)", &update_time_ms, 1.0f, 10000.0f,
+    static float update_time_prev;
+    ImGui::SliderFloat("Update Time (ms)", &update_time_ms, 0.1f, 10000.0f,
                        "%.1f ms", ImGuiSliderFlags_Logarithmic);
 
-    sim_->SetUpdateRate(static_cast<uint64_t>(update_time_ms * 1e6));
+    if (update_time_ms != update_time_prev) {
+      sim_->SetUpdateRate(static_cast<uint64_t>(update_time_ms * 1e6));
+      update_time_prev = update_time_ms;
+    }
     HelpMarker(
         "Controls how often the radar simulation updates. Lower values mean "
         "faster updates.",

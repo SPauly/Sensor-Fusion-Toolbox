@@ -32,19 +32,7 @@ class SensorSimulator : public internal::SimBase {
   [[nodiscard]] std::shared_ptr<Trajectory<ObjectState2D>>
   CreateTrajectoryFromVec2D(
       const std::vector<Vector2D>& line_vector,
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
-    std::unique_lock<std::mutex> lock(mtx_);
-
-    trajectories_.push_back(
-        std::make_shared<internal::TrajectoryImpl<ObjectState2D>>(line_vector,
-                                                                  type));
-
-    // store the index offset of the trajectory
-    traj_index_offset_.push_back(curr_index_);
-
-    return std::static_pointer_cast<Trajectory<ObjectState2D>>(
-        trajectories_.back());
-  }
+      const ObjectModelType type = ObjectModelType::BasicVelocityModel);
 
   /// @brief Adds another sensor to the simulation but does not start it.
   /// @return New Sensor that was added
@@ -95,10 +83,7 @@ class SensorSimulator : public internal::SimBase {
   /// @brief Sets the update rate of the simulation. This is the rate at which
   /// the simulation will run.
   /// @param rate_ns Update rate in nanoseconds.
-  void SetUpdateRate(TimeStepIdType rate_ns) {
-    std::unique_lock<std::mutex> lock(mtx_);
-    update_rate_ = rate_ns;
-  }
+  void SetUpdateRate(TimeStepIdType rate_ns);
 
  protected:
   virtual void RunImpl();

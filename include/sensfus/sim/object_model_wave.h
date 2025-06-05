@@ -88,6 +88,8 @@ class WaveModel : public ObjectModelBase<StateType> {
   inline void RecalculateParams() {
     omega_ = acceleration_ms2_ / 2 * speed_ms_;                // w = q/2 * v
     amplitude_ = (speed_ms_ * speed_ms_) / acceleration_ms2_;  // A = v^2/q
+
+    ApplyToTrajectory();  // Recalculate the trajectory based on new params
   }
 
  private:
@@ -95,11 +97,12 @@ class WaveModel : public ObjectModelBase<StateType> {
   std::vector<VecType> tangentials_, normvecs_;
 
   double speed_ms_ = 300.0;        // Speed in m/s
+  double period_s_ = 1.0;          // Period in seconds
   double acceleration_ms2_ = 9.0;  // Acceleration in m/s^2
   double height_m_ = 1000.0;       // Height of the wave in m (for 3D waves)
 
   // Wave simulation parameters
-  double omega_ = 0.0;      // Angular velocity in rad/s
+  double omega_ = 0.0;      // w = acceleration/2 * speed
   double amplitude_ = 0.0;  // Amplitude of the wave in m
 };
 

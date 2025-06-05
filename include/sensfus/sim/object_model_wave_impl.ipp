@@ -15,12 +15,12 @@ void WaveModel<StateType>::ApplyToTrajectory() {
   // First calculate the period of the wave
   const double period = 2 * M_PI / omega_;  // Period in seconds
 
-  // Calculate the number of points in the trajectory based on the sampling rate
-  // and Wave period
-  const double sampling_rate =
-      time_between_points_ns_ / 1e9;  // Convert ns to seconds
+  // Calculate the number of points in the trajectory based on the sampling
+  // interval and ensure the last point is at or just past the end of one period
+  const double sampling_interval =
+      time_between_points_ns_ * 1e-9;  // ns to seconds
   const unsigned long long num_points =
-      static_cast<unsigned long long>(std::ceil(period / sampling_rate));
+      static_cast<unsigned long long>(std::ceil(period / sampling_interval));
 
   states_->resize(num_points);
   tangentials_.resize(num_points);
@@ -28,7 +28,7 @@ void WaveModel<StateType>::ApplyToTrajectory() {
 
   // Calculate the Wave trajectory
   for (size_t i = 0; i < num_points; ++i) {
-    double current_time = i * sampling_rate;  // Current time in seconds
+    double current_time = i * sampling_interval;  // Current time in seconds
 
     StateType& state = (*states_)[i];
 

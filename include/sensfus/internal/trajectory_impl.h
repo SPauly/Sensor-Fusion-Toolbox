@@ -35,26 +35,37 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
 
  public:
   explicit TrajectoryImpl(const sim::ObjectModelType type =
-                              sim::ObjectModelType::BasicVelocityModel)
+                              sim::ObjectModelType::BasicVelocityModel,
+                          TimeStepIdType time_between_points_ns = 1000.0)
       : states_(std::make_shared<std::vector<StateType>>()),
         object_model_(sim::ObjectModelFactory<StateType>::CreateObjectModel(
-            type, states_)) {}
+            type, states_)) {
+    // also set the time between points for the model
+    object_model_->SetTimeBetweenPointsNs(time_between_points_ns);
+    object_model_->ApplyToTrajectory();
+  }
+
   /// @brief Initializes the trajectory with a vector of states.
   /// @param points precomputed trajectory states.
   explicit TrajectoryImpl(const std::vector<StateType>& points,
                           const sim::ObjectModelType type =
-                              sim::ObjectModelType::BasicVelocityModel)
+                              sim::ObjectModelType::BasicVelocityModel,
+                          TimeStepIdType time_between_points_ns = 1000.0)
       : states_(std::make_shared<std::vector<StateType>>(std::move(points))),
         object_model_(sim::ObjectModelFactory<StateType>::CreateObjectModel(
-            type, states_)) {}
+            type, states_)) {
+    object_model_->SetTimeBetweenPointsNs(time_between_points_ns);
+    object_model_->ApplyToTrajectory();
+  }
   /// @brief Creates a trajectory based on the given points using the underlying
   /// physics model for the target. (This will decide velocity and acceleration
   /// during each point transition.)
   /// @param line_vector Vector of 2D or 3D points representing the trajectory.
   explicit TrajectoryImpl(const std::vector<RawPosType>& line_vector,
                           const sim::ObjectModelType type =
-                              sim::ObjectModelType::BasicVelocityModel)
-      : TrajectoryImpl(type) {
+                              sim::ObjectModelType::BasicVelocityModel,
+                          TimeStepIdType time_between_points_ns = 1000.0)
+      : TrajectoryImpl(type, time_between_points_ns) {
     FromLineVector(line_vector);
   }
   virtual ~TrajectoryImpl() = default;
@@ -136,6 +147,11 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     return type_;
   }
 
+  bool GetEnableWrapAround() const {
+    std::unique_lock<std::mutex> lock(mtx_);
+    return enable_wrap_around_;
+  }
+
   // Setters
 
   /// @brief Sets a new object model for the trajectory. This will clear the
@@ -154,8 +170,12 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     // deactivate the old model
     object_model_->SetIsActive(false);
 
+    TimeStepIdType time_between_points_ns =
+        object_model_->GetTimeBetweenPointsNs();
+
     object_model_ =
         sim::ObjectModelFactory<StateType>::CreateObjectModel(type, states_);
+    object_model_->SetTimeBetweenPointsNs(time_between_points_ns);
     object_model_->ApplyToTrajectory();
 
     // set object model to be the active one
