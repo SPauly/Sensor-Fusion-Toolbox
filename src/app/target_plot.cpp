@@ -6,19 +6,18 @@
 namespace sensfus {
 namespace app {
 void TargetPlot::RunControllInterface() {
-  /// TODO: Implement the control interface for the target plot to feature
-  /// restart etc.
-
   // Display Target Positions and Velocities
   for (size_t i = 0; i < id_of_target_at_index_.size(); i++) {
-    ImGui::Text("Status Target %f",
-                id_of_target_at_index_.at(static_cast<TargetIdType>(i)));
+    TargetIdType targ = id_of_target_at_index_.at(static_cast<TargetIdType>(i));
 
-    ImGui::Text("Cartesian Position: x: %lf  y: %lf", cart_x_.at(i).back(),
-                cart_y_.at(i).back());
+    ImGui::Text("Status Target %lli", targ);
+
+    ImGui::Text("Cartesian Position: x: %lf  y: %lf", cart_x_.at(targ).back(),
+                cart_y_.at(targ).back());
 
     ImGui::Text("Current Velocity: (%lf,%lf)  Current Acceleration: (%lf,%lf)",
-                velo_x_.at(i), velo_y_.at(i), acc_x_.at(i), acc_y_.at(i));
+                velo_x_.at(targ), velo_y_.at(targ), acc_x_.at(targ),
+                acc_y_.at(targ));
 
     ImGui::Separator();
   }
@@ -38,6 +37,8 @@ void TargetPlot::RunPlotInterface() {
                         cart_x_.at(i).data(), cart_y_.at(i).data(),
                         (int)(cart_x_.at(i).size()));
   }
+
+  RunControllInterface();
 }
 
 void TargetPlot::AddTargetUpdate(
