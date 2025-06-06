@@ -51,6 +51,11 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @param speed_ms Speed in m/s.
   inline void SetSpeed(const double speed_ms) {
     std::unique_lock<std::mutex> lock(mtx_);
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the speed
+      return;
+    }
+
     speed_ms_ = speed_ms;
 
     lock.unlock();
@@ -61,6 +66,11 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @param acceleration_ms2 Acceleration in m/s^2.
   inline void SetAcceleration(const double acceleration_ms2) {
     std::unique_lock<std::mutex> lock(mtx_);
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the acceleration
+      return;
+    }
+
     acceleration_ms2_ = acceleration_ms2;
     lock.unlock();
     RecalculateParams();
@@ -70,6 +80,11 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @param period_s Period in seconds.
   inline void SetPeriod(double period_s) {
     std::unique_lock<std::mutex> lock(mtx_);
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the period
+      return;
+    }
+
     period_s_ = period_s;
     omega_ = 2.0 * M_PI / period_s_;  // Recalculate omega_
 
@@ -79,6 +94,21 @@ class WaveModel : public ObjectModelBase<StateType> {
 
     lock.unlock();
     ApplyToTrajectory();
+  }
+
+  inline void UseFixedParams(const bool use_fixed_params) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    use_fixed_params_ = use_fixed_params;
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the speed or
+      // acceleration
+      speed_ms_ = 300.0;        // Default speed in m/s
+      acceleration_ms2_ = 9.0;  // Default acceleration in m/s^2
+      height_m_ = 1000.0;       // Default height of the wave in m
+
+      lock.unlock();
+      RecalculateParams();
+    }
   }
 
  protected:
@@ -116,6 +146,8 @@ class WaveModel : public ObjectModelBase<StateType> {
  private:
   mutable std::mutex mtx_;
   std::vector<VecType> tangentials_, normvecs_;
+
+  bool use_fixed_params_ = true;  // Use fixed parameters for the wave
 
   double speed_ms_ = 300.0;        // Speed in m/s
   double acceleration_ms2_ = 9.0;  // Acceleration in m/s^2

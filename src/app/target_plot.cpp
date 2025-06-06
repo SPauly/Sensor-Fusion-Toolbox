@@ -14,19 +14,29 @@ void TargetPlot::RunControllInterface() {
     ImGui::Text("Status Target %f",
                 id_of_target_at_index_.at(static_cast<TargetIdType>(i)));
 
-    ImGui::Text("Cartesian Position: x: %f  y: %f", cart_x_.at(i).back(),
+    ImGui::Text("Cartesian Position: x: %lf  y: %lf", cart_x_.at(i).back(),
                 cart_y_.at(i).back());
 
-    /// TODO: Add the rest
+    ImGui::Text("Current Velocity: (%lf,%lf)  Current Acceleration: (%lf,%lf)",
+                velo_x_.at(i), velo_y_.at(i), acc_x_.at(i), acc_y_.at(i));
+
     ImGui::Separator();
   }
 }
 
 void TargetPlot::RunPlotInterface() {
   for (size_t i = 0; i < id_of_target_at_index_.size(); i++) {
-    ImPlot::PlotScatter(labels_.at(i).c_str(), cart_x_.at(i).data(),
-                        cart_y_.at(i).data(), (int)(cart_x_.at(i).size()));
-    /// TODO: Draw lines here
+    // Set line style for thin continuous lines
+    ImPlot::SetNextLineStyle(ImVec4(0, 0.5f, 1.0f, -1.0f),
+                             1.0f);  // RGBA + thickness
+    ImPlot::PlotLine(labels_.at(i).c_str(), cart_x_.at(i).data(),
+                     cart_y_.at(i).data(), (int)(cart_x_.at(i).size()));
+
+    // Optionally add small scatter points (visual clarity)
+    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 2.0f);
+    ImPlot::PlotScatter((labels_.at(i) + " points").c_str(),
+                        cart_x_.at(i).data(), cart_y_.at(i).data(),
+                        (int)(cart_x_.at(i).size()));
   }
 }
 
