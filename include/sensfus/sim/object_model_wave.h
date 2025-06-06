@@ -52,6 +52,8 @@ class WaveModel : public ObjectModelBase<StateType> {
   inline void SetSpeed(const double speed_ms) {
     std::unique_lock<std::mutex> lock(mtx_);
     speed_ms_ = speed_ms;
+
+    lock.unlock();
     RecalculateParams();
   }
 
@@ -60,7 +62,23 @@ class WaveModel : public ObjectModelBase<StateType> {
   inline void SetAcceleration(const double acceleration_ms2) {
     std::unique_lock<std::mutex> lock(mtx_);
     acceleration_ms2_ = acceleration_ms2;
+    lock.unlock();
     RecalculateParams();
+  }
+
+  /// @brief Sets the time the wave takes to complete one period in seconds.
+  /// @param period_s Period in seconds.
+  inline void SetPeriod(double period_s) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    period_s_ = period_s;
+    omega_ = 2.0 * M_PI / period_s_;  // Recalculate omega_
+
+    // Recalculate acceleration and amplitude based on the new period
+    acceleration_ms2_ = 2 * M_PI * speed_ms_ / period_s_;
+    amplitude_ = (speed_ms_ * speed_ms_) / acceleration_ms2_;  // A = v^2/q
+
+    lock.unlock();
+    ApplyToTrajectory();
   }
 
  protected:
@@ -86,9 +104,12 @@ class WaveModel : public ObjectModelBase<StateType> {
   }
 
   inline void RecalculateParams() {
+    std::unique_lock<std::mutex> lock(mtx_);
+
     omega_ = acceleration_ms2_ / 2 * speed_ms_;                // w = q/2 * v
     amplitude_ = (speed_ms_ * speed_ms_) / acceleration_ms2_;  // A = v^2/q
 
+    lock.unlock();
     ApplyToTrajectory();  // Recalculate the trajectory based on new params
   }
 
@@ -97,9 +118,9 @@ class WaveModel : public ObjectModelBase<StateType> {
   std::vector<VecType> tangentials_, normvecs_;
 
   double speed_ms_ = 300.0;        // Speed in m/s
-  double period_s_ = 1.0;          // Period in seconds
   double acceleration_ms2_ = 9.0;  // Acceleration in m/s^2
   double height_m_ = 1000.0;       // Height of the wave in m (for 3D waves)
+  double period_s_ = 0.0;          // Period of the wave in seconds
 
   // Wave simulation parameters
   double omega_ = 0.0;      // w = acceleration/2 * speed

@@ -102,15 +102,6 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
     return (*states_)[utils::fast_mod(index, states_->size())];
   }
 
-  /// @brief Get shared access to the object model of the trajectory.
-  /// @return Shared Pointer to the model base. Get the type to interpret it
-  /// properly
-  virtual std::shared_ptr<sim::ObjectModelBase<StateType>> GetObjectModel()
-      const {
-    std::unique_lock<std::mutex> lock(mtx_);
-    return object_model_;
-  }
-
   inline const RawPosType GetTangentialAt(TimeStepIdType timestamp) const {
     std::unique_lock<std::mutex> lock(mtx_);
     return static_cast<RawPosType>(object_model_->GetTangentialAt(timestamp));
@@ -145,6 +136,15 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
   virtual const sim::ObjectModelType GetObjectModelType() const override {
     std::unique_lock<std::mutex> lock(mtx_);
     return type_;
+  }
+
+  /// @brief Returns the object model of the trajectory.
+  /// @return Shared Pointer to the model base. Get the type to interpret it
+  /// properly
+  [[nodiscard]] virtual std::shared_ptr<sim::ObjectModelBase<StateType>>
+  GetObjectModel() const override {
+    std::unique_lock<std::mutex> lock(mtx_);
+    return object_model_;
   }
 
   bool GetEnableWrapAround() const {

@@ -62,9 +62,38 @@ void TrajectoryPlaner::OnUIRender() {
   }
 
   ImGui::End();
+
+  WaveTrajSettings();
 }
 
 void TrajectoryPlaner::OnDetach() {}
+
+void TrajectoryPlaner::WaveTrajSettings() {
+  ImGui::Begin("Wave Trajectory Settings");
+  static float speed = 1.0f;
+  static float acceleration = 0.5f;
+  static float period = 2.0f;
+
+  ImGui::SliderFloat("Speed", &speed, 0.1f, 10.0f, "%.2f");
+  ImGui::SliderFloat("Acceleration", &acceleration, 0.0f, 5.0f, "%.2f");
+  ImGui::SliderFloat("Period", &period, 0.1f, 10.0f, "%.2f");
+
+  if (!traj_.empty() &&
+      (speed != speed_ || acceleration != acceleration_ || period != period_)) {
+    speed_ = speed;
+    acceleration_ = acceleration;
+    period_ = period;
+
+    std::static_pointer_cast<sim::WaveModel2D>(traj_.back()->GetObjectModel())
+        ->SetSpeed(speed);
+    std::static_pointer_cast<sim::WaveModel2D>(traj_.back()->GetObjectModel())
+        ->SetAcceleration(speed);
+    std::static_pointer_cast<sim::WaveModel2D>(traj_.back()->GetObjectModel())
+        ->SetPeriod(period);
+  }
+
+  ImGui::End();
+}
 
 }  // namespace app
 
