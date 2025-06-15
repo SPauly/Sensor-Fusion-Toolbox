@@ -6,31 +6,107 @@
 namespace sensfus {
 namespace app {
 void TargetPlot::RunControllInterface() {
-  /// TODO: Implement the control interface for the target plot to feature
-  /// restart etc.
-
   // Display Target Positions and Velocities
   for (size_t i = 0; i < id_of_target_at_index_.size(); i++) {
-    ImGui::Text("Status Target %f", id_of_target_at_index_.at(i));
+    TargetIdType targ = id_of_target_at_index_.at(static_cast<TargetIdType>(i));
 
-    ImGui::Text("Cartesian Position: x: %f  y: %f", cart_x_.at(i).back(),
-                cart_y_.at(i).back());
+    ImGui::Text("Status Target %lli", targ);
 
-    /// TODO: Add the rest
+    ImGui::Text("Cartesian Position: x: %lf  y: %lf", cart_x_.at(targ).back(),
+                cart_y_.at(targ).back());
+
+    ImGui::Text("Current Velocity: (%lf,%lf)  Current Acceleration: (%lf,%lf)",
+                velo_x_.at(targ), velo_y_.at(targ), acc_x_.at(targ),
+                acc_y_.at(targ));
+
     ImGui::Separator();
   }
 }
 
 void TargetPlot::RunPlotInterface() {
+  ImDrawList* draw_list = ImPlot::GetPlotDrawList();
+
   for (size_t i = 0; i < id_of_target_at_index_.size(); i++) {
-    ImPlot::PlotScatter(labels_.at(i).c_str(), cart_x_.at(i).data(),
-                        cart_y_.at(i).data(), (int)(cart_x_.at(i).size()));
-    /// TODO: Draw lines here
+    const auto& x = cart_x_.at(i);
+    const auto& y = cart_y_.at(i);
+
+    // Set line style for thin continuous lines
+    ImPlot::SetNextLineStyle(ImVec4(0, 0.5f, 1.0f, -1.0f),
+                             1.0f);  // RGBA + thickness
+    ImPlot::PlotLine(labels_.at(i).c_str(), x.data(), y.data(),
+                     (int)(x.size()));
+
+    // Optionally add small scatter points (visual clarity)
+    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 2.0f);
+    ImPlot::PlotScatter((labels_.at(i) + " points").c_str(), x.data(), y.data(),
+                        (int)(x.size()));
+
+    // Draw velocity and acceleration vectors
+    // Draw arrow vectors for the latest update
+    if (!x.empty()) {
+      const ImPlotPoint p0 = ImPlot::PlotToPixels(x.back(), y.back());
+
+      // Get current index (assuming same order as tangents/normals)
+      ObjectPosition2D t, n;
+      t.setZero();
+      n.setZero();
+
+      for (const auto& [id, vec] : last_update_->tangentials) {
+        if (id == i) t = vec;
+      }
+      for (const auto& [id, vec] : last_update_->normvecs) {
+        if (id == i) n = vec;
+      }
+
+      // Get acceleration vector a = (ax, ay)
+      Eigen::Vector2d a(acc_x_.at(i), acc_y_.at(i));
+
+      // Tangential and normal components of acceleration
+      double a_t = a.dot(t);
+      double a_n = a.dot(n);
+
+      double scale = 100.0;  // for visualization
+
+      // Draw r_dot (velocity vector)
+      Eigen::Vector2d r_dot(velo_x_.at(i), velo_y_.at(i));
+      ImVec2 v_end = ImPlot::PlotToPixels(x.back() + scale / 10.0 * r_dot.x(),
+                                          y.back() + scale / 10.0 * r_dot.y());
+      draw_list->AddLine(ImVec2((float)p0.x, (float)p0.y), v_end,
+                         IM_COL32(0, 255, 0, 255), 1.0f);  // Green for velocity
+
+      // Draw r_ddot (acceleration vector)
+      ImVec2 a_end = ImPlot::PlotToPixels(x.back() + scale * a.x(),
+                                          y.back() + scale * a.y());
+      draw_list->AddLine(ImVec2((float)p0.x, (float)p0.y), a_end,
+                         IM_COL32(255, 0, 0, 255),
+                         1.0f);  // Red for acceleration
+
+      // Draw tangential component a_t * t
+      Eigen::Vector2d a_t_vec = a_t * t;
+      ImVec2 at_end = ImPlot::PlotToPixels(x.back() + scale * a_t_vec.x(),
+                                           y.back() + scale * a_t_vec.y());
+      draw_list->AddLine(ImVec2((float)p0.x, (float)p0.y), at_end,
+                         IM_COL32(0, 255, 255, 255),
+                         1.0f);  // Cyan for tangential
+
+      // Draw normal component a_n * n
+      Eigen::Vector2d a_n_vec = a_n * n;
+      ImVec2 an_end = ImPlot::PlotToPixels(x.back() + scale * a_n_vec.x(),
+                                           y.back() + scale * a_n_vec.y());
+      draw_list->AddLine(ImVec2((float)p0.x, (float)p0.y), an_end,
+                         IM_COL32(255, 0, 255, 255),
+                         1.0f);  // Magenta for normal
+    }
   }
+
+  RunControllInterface();
 }
 
 void TargetPlot::AddTargetUpdate(
     const std::shared_ptr<const TrueTargetState2D> update) {
+  // Store the last update for later use
+  last_update_ = update;
+
   for (size_t i = 0; i < update->states.size(); i++) {
     // First get the index of this target
     auto it = id_of_target_at_index_.find(update->states.at(i).first);

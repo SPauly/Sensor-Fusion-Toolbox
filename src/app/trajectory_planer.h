@@ -23,6 +23,9 @@ class TrajectoryPlaner : public utils::Layer {
   virtual void OnUIRender() override;
   virtual void OnDetach() override;
 
+ protected:
+  void WaveTrajSettings();
+
  private:
   // Style
   ImGuiWindowFlags window_flags_ = ImGuiWindowFlags_NoCollapse;
@@ -35,7 +38,12 @@ class TrajectoryPlaner : public utils::Layer {
 
   // Simulation data
   std::shared_ptr<sim::SensorSimulator> sim_;
-  sim::Trajectory<ObjectState2D> traj_;
+  std::vector<std::shared_ptr<sim::Trajectory<ObjectState2D>>> traj_;
+
+  // temporary variables for wave trajectory settings
+  float speed_ = 1.0f;         // Speed in m/s
+  float acceleration_ = 0.0f;  // Acceleration in m/s^2
+  float period_ = 2.0f;        // Period in seconds
 };
 
 }  // namespace app

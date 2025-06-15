@@ -6,7 +6,7 @@
 namespace sensfus {
 namespace internal {
 
-template <typename ObjectType = ObjectState2D>
+template <typename StateType = ObjectState2D>
 class SensorBase {
  public:
   explicit SensorBase(const SensorIdType &id) : kId(id) {}

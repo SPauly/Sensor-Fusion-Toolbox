@@ -3,6 +3,8 @@
 #include <imgui.h>
 #include <implot.h>
 
+#include "sensfus/utils/math.h"
+
 namespace sensfus {
 namespace app {
 
@@ -35,7 +37,8 @@ void SensorViewport::OnUIRender() {
 
   // select which plots are actually shown:
   for (size_t i = 0; i < plot_callbacks_.size(); i++) {
-    if (i % 4 != 0) ImGui::SameLine();  // Print 4 in a row
+    if (sensfus::utils::fast_mod<size_t>(i, 4) != 0)
+      ImGui::SameLine();  // Print 4 in a row
     ImGui::Checkbox(suspendet_[i].first.c_str(), &suspendet_[i].second);
   }
 

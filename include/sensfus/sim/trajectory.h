@@ -4,8 +4,10 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 #include "sensfus/types.h"
+#include "sensfus/utils/math.h"
 #include "sensfus/sim/object_model.h"
 
 namespace sensfus {
@@ -13,92 +15,56 @@ namespace sim {
 
 /// @brief Wrapper to handle creation and access to a trajectory of an object
 /// with a specified state type and physics model.
-/// @tparam ObjectType
-template <typename ObjectType = ObjectState2D>
+/// @tparam StateType
+template <typename StateType = ObjectState2D>
 class Trajectory {
+  // Ensure StateType is either ObjectState2D or ObjectState3D
+  static_assert(std::is_same<StateType, ObjectState2D>::value ||
+                    std::is_same<StateType, ObjectState3D>::value,
+                "StateType must be ObjectState2D or ObjectState3D");
+
  public:
-  // Ensure ObjectType is either ObjectState2D or ObjectState3D
-  static_assert(std::is_same<ObjectType, ObjectState2D>::value ||
-                    std::is_same<ObjectType, ObjectState3D>::value,
-                "ObjectType must be ObjectState2D or ObjectState3D");
-
-  // Determine the dimension of the object state based on the type
-  static constexpr int kDim =
-      std::is_same<ObjectType, ObjectState2D>::value
-          ? 2
-          : (std::is_same<ObjectType, ObjectState3D>::value ? 3 : -1);
-
-  // Type aliases needed
-  using RawPosType =
-      std::conditional_t<std::is_same<ObjectType, ObjectState2D>::value,
-                         ObjectPosition2D, ObjectPosition3D>;
-
-  explicit Trajectory(
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : points_(std::make_shared<std::vector<ObjectType>>()),
-        object_model_(
-            ObjectModelFactory<ObjectType>::CreateObjectModel(type, points_)) {}
-  /// @brief Initializes the trajectory with a vector of states.
-  /// @param points precomputed trajectory states.
-  explicit Trajectory(
-      const std::vector<ObjectType>& points,
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : Trajectory(type), points_(points) {}
-  /// @brief Creates a trajectory based on the given points using the underlying
-  /// physics model for the target. (This will decide velocity and acceleration
-  /// during each point transition.)
-  /// @param line_vector Vector of 2D or 3D points representing the trajectory.
-  explicit Trajectory(
-      const std::vector<RawPosType>& line_vector,
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel)
-      : Trajectory(type) {
-    FromLineVector(line_vector);
-  }
+  // This should only be called by SensorSimulator. Otherwise it is not assigned
+  // to a simulator
+  explicit Trajectory() = default;
   virtual ~Trajectory() = default;
 
-  /// @brief Creates a trajectory based on the given points using the underlying
-  /// physics model for the target. (This will decide velocity and acceleration
-  /// during each point transition.)
-  /// @param line_vector Vector of 2D or 3D points representing the trajectory.
-  void FromLineVector(const std::vector<RawPosType>& line_vector) {
-    points_->clear();
-    points_->reserve(line_vector.size());
-    for (const auto& point : line_vector) {
-      ObjectType state;
-      if constexpr (kDim == 2) {
-        state.head<2>() = point;
-      } else if constexpr (kDim == 3) {
-        state.head<3>() = point;
-      }
-      points_->emplace_back(state);
-    }
-    object_model_->ApplyToTrajectory();
-  }
-
-  /// @brief Returns the object state at the given index.
-  /// @param index Timestep index of the object state.
-  /// @return ObjectType at the given index. When index is out of bounds, it
-  /// returns the last valid state.
-  const ObjectType& GetState(unsigned long long index) const {
-    if (index >= points_->size()) {
-      index = points_->size() - 1;
-    }
-    return (*points_)[index];
-  }
+  /// TODO: Make it non-copyable, non-movable
 
   /// @brief Returns the number of points in the trajectory.
   /// @return Tragectory size
-  inline const unsigned long long GetSize() const { return points_->size(); }
+  virtual const TimeStepIdType GetSize() const { return 0; }
 
-  inline void SetObjectModel(
-      const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
-    object_model_ = ObjectModelFactory<ObjectType>::CreateObjectModel(type);
+  /// @brief Returns the underlying ModelType of the trajectory
+  /// @return Of type sim::ObjectModelType
+  virtual const ObjectModelType GetObjectModelType() const {
+    return sim::ObjectModelType::BasicVelocityModel;
   }
 
- private:
-  std::shared_ptr<std::vector<ObjectType>> points_;
+  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase<StateType>>
+  GetObjectModel() const {
+    return nullptr;
+  }
 
-  std::shared_ptr<ObjectModelBase<ObjectType>> object_model_ = nullptr;
+  // Setters
+
+  /// @brief Sets a new object model for the trajectory. This will clear the
+  /// former trajectory data and apply the new model to the current states.
+  /// @param type Type of the object model to set. must be one of the
+  /// ObjectModelType enum values.
+  /// @return The shared_ptr returned only guarantees access to this trajectory
+  /// until the next SetObjectModel is called. This can happen from another
+  /// thread. To verify if the objectmodel is active call IsActive().
+  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase<StateType>>
+  SetObjectModel(
+      const ObjectModelType type = ObjectModelType::BasicVelocityModel) {
+    return nullptr;
+  }
+
+  /// @brief This will set the trajectory on repeat until EnableWrapAround is
+  /// set to false again
+  /// @param wrap Set to true to enable wrap around
+  virtual void SetEnableWrapAround(bool wrap = true) {}
 };
 
 }  // namespace sim
