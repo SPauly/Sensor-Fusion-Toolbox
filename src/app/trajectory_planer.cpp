@@ -62,9 +62,13 @@ void TrajectoryPlaner::OnUIRender() {
   }
 
   ImGui::End();
+
+  WaveTrajSettings();
 }
 
 void TrajectoryPlaner::OnDetach() {}
+
+void TrajectoryPlaner::WaveTrajSettings() {}
 
 }  // namespace app
 

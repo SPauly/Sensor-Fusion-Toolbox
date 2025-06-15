@@ -41,6 +41,11 @@ class Trajectory {
     return sim::ObjectModelType::BasicVelocityModel;
   }
 
+  [[nodiscard]] virtual std::shared_ptr<ObjectModelBase<StateType>>
+  GetObjectModel() const {
+    return nullptr;
+  }
+
   // Setters
 
   /// @brief Sets a new object model for the trajectory. This will clear the

@@ -51,7 +51,14 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @param speed_ms Speed in m/s.
   inline void SetSpeed(const double speed_ms) {
     std::unique_lock<std::mutex> lock(mtx_);
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the speed
+      return;
+    }
+
     speed_ms_ = speed_ms;
+
+    lock.unlock();
     RecalculateParams();
   }
 
@@ -59,8 +66,49 @@ class WaveModel : public ObjectModelBase<StateType> {
   /// @param acceleration_ms2 Acceleration in m/s^2.
   inline void SetAcceleration(const double acceleration_ms2) {
     std::unique_lock<std::mutex> lock(mtx_);
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the acceleration
+      return;
+    }
+
     acceleration_ms2_ = acceleration_ms2;
+    lock.unlock();
     RecalculateParams();
+  }
+
+  /// @brief Sets the time the wave takes to complete one period in seconds.
+  /// @param period_s Period in seconds.
+  inline void SetPeriod(double period_s) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the period
+      return;
+    }
+
+    period_s_ = period_s;
+    omega_ = 2.0 * M_PI / period_s_;  // Recalculate omega_
+
+    // Recalculate acceleration and amplitude based on the new period
+    acceleration_ms2_ = 2 * M_PI * speed_ms_ / period_s_;
+    amplitude_ = (speed_ms_ * speed_ms_) / acceleration_ms2_;  // A = v^2/q
+
+    lock.unlock();
+    ApplyToTrajectory();
+  }
+
+  inline void UseFixedParams(const bool use_fixed_params) {
+    std::unique_lock<std::mutex> lock(mtx_);
+    use_fixed_params_ = use_fixed_params;
+    if (use_fixed_params_) {
+      // If fixed parameters are used, we cannot change the speed or
+      // acceleration
+      speed_ms_ = 300.0;        // Default speed in m/s
+      acceleration_ms2_ = 9.0;  // Default acceleration in m/s^2
+      height_m_ = 1000.0;       // Default height of the wave in m
+
+      lock.unlock();
+      RecalculateParams();
+    }
   }
 
  protected:
@@ -86,20 +134,28 @@ class WaveModel : public ObjectModelBase<StateType> {
   }
 
   inline void RecalculateParams() {
+    std::unique_lock<std::mutex> lock(mtx_);
+
     omega_ = acceleration_ms2_ / 2 * speed_ms_;                // w = q/2 * v
     amplitude_ = (speed_ms_ * speed_ms_) / acceleration_ms2_;  // A = v^2/q
+
+    lock.unlock();
+    ApplyToTrajectory();  // Recalculate the trajectory based on new params
   }
 
  private:
   mutable std::mutex mtx_;
   std::vector<VecType> tangentials_, normvecs_;
 
+  bool use_fixed_params_ = true;  // Use fixed parameters for the wave
+
   double speed_ms_ = 300.0;        // Speed in m/s
   double acceleration_ms2_ = 9.0;  // Acceleration in m/s^2
   double height_m_ = 1000.0;       // Height of the wave in m (for 3D waves)
+  double period_s_ = 0.0;          // Period of the wave in seconds
 
   // Wave simulation parameters
-  double omega_ = 0.0;      // Angular velocity in rad/s
+  double omega_ = 0.0;      // w = acceleration/2 * speed
   double amplitude_ = 0.0;  // Amplitude of the wave in m
 };
 

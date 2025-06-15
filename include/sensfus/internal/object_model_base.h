@@ -59,9 +59,11 @@ class ObjectModelBase {
   inline void SetTimeBetweenPointsNs(const double time_between_points_ns) {
     std::unique_lock<std::mutex> lock(mtx_);
     time_between_points_ns_ = time_between_points_ns;
+  }
 
-    lock.unlock();
-    ApplyToTrajectory();
+  inline TimeStepIdType GetTimeBetweenPointsNs() const {
+    std::unique_lock<std::mutex> lock(mtx_);
+    return time_between_points_ns_;
   }
 
   // Getters
@@ -133,7 +135,15 @@ class BasicVelocityModel : public ObjectModelBase<StateType> {
   ~BasicVelocityModel() override = default;
 
   virtual void ApplyToTrajectory() override {
-    /// TODO: Implement the basic velocity model
+    for (StateType &state : *(this->states_)) {
+      if constexpr (this->kDim == 2) {
+        state.segment<2>(1) = Vector2D(0, 0);
+        state.segment<2>(2) = Vector2D(0, 0);
+      } else {
+        state.segment<3>(1) = Vector3D(0, 0, 0);
+        state.segment<3>(2) = Vector3D(0, 0, 0);
+      }
+    }
     return;
   }
 

@@ -73,6 +73,22 @@ void SensorSimulator::ResetSimulation() {
   // Implement this later
 }
 
+std::shared_ptr<Trajectory<ObjectState2D>>
+SensorSimulator::CreateTrajectoryFromVec2D(
+    const std::vector<Vector2D>& line_vector, const ObjectModelType type) {
+  std::unique_lock<std::mutex> lock(mtx_);
+
+  trajectories_.push_back(
+      std::make_shared<internal::TrajectoryImpl<ObjectState2D>>(
+          line_vector, type, update_rate_));
+
+  // store the index offset of the trajectory
+  traj_index_offset_.push_back(curr_index_);
+
+  return std::static_pointer_cast<Trajectory<ObjectState2D>>(
+      trajectories_.back());
+}
+
 void SensorSimulator::RunImpl() {
   // Retrieve the current state of all the simulated objects
   true_states_.push_back(TrueTargetState2D());
@@ -108,6 +124,28 @@ void SensorSimulator::RunImpl() {
   /// TODO: Implement this
 
   curr_index_++;
+}
+
+void SensorSimulator::SetUpdateRate(TimeStepIdType rate_ns) {
+  std::unique_lock<std::mutex> lock(mtx_);
+  update_rate_ = rate_ns;
+
+  // Update the trajectory step based on the increase in simulation steps
+  if (trajectories_.empty()) return;
+  TimeStepIdType prev_size = trajectories_.at(0)->GetSize();
+
+  // Set the update rate for each trajectory and create new points
+  for (const auto& traj : trajectories_) {
+    traj->GetObjectModel()->SetTimeBetweenPointsNs(rate_ns);
+    traj->GetObjectModel()->ApplyToTrajectory();
+  }
+
+  for (const auto& traj : trajectories_3d_) {
+    traj->GetObjectModel()->SetTimeBetweenPointsNs(rate_ns);
+    traj->GetObjectModel()->ApplyToTrajectory();
+  }
+
+  curr_index_ += trajectories_.at(0)->GetSize() - prev_size;
 }
 
 }  // namespace sim

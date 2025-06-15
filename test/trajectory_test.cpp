@@ -1,17 +1,19 @@
 #include <gtest/gtest.h>
-#include <sensfus/sim/trajectory.h>
+#include <sensfus/internal/trajectory_impl.h>
 #include <sensfus/types.h>
 
 namespace sensfus {
 namespace sim {
 namespace sensfus_test {
 
+using sensfus::internal::TrajectoryImpl;
+
 TEST(TrajectoryTest, ConstructFromLineVector2D) {
   std::vector<ObjectPosition2D> points = {
       (ObjectPosition2D() << 1.0, 2.0).finished(),
       (ObjectPosition2D() << 3.0, 4.0).finished(),
       (ObjectPosition2D() << 5.0, 6.0).finished()};
-  Trajectory<ObjectState2D> traj(points);
+  TrajectoryImpl<ObjectState2D> traj(points);
 
   ASSERT_EQ(traj.GetSize(), 3);
   auto state0 = traj.GetState(0);
@@ -27,7 +29,7 @@ TEST(TrajectoryTest, ConstructFromLineVector3D) {
   std::vector<ObjectState3D> points = {
       (ObjectState3D() << 1.0, 2.0, 3.0).finished(),
       (ObjectState3D() << 4.0, 5.0, 6.0).finished()};
-  Trajectory<ObjectState3D> traj(points);
+  TrajectoryImpl<ObjectState3D> traj(points);
 
   ASSERT_EQ(traj.GetSize(), 2);
   auto state0 = traj.GetState(0);
@@ -45,7 +47,7 @@ TEST(TrajectoryTest, GetStateOutOfBoundsReturnsLast) {
   std::vector<ObjectPosition2D> points = {
       (ObjectPosition2D() << 1.0, 2.0).finished(),
       (ObjectPosition2D() << 3.0, 4.0).finished()};
-  Trajectory<ObjectState2D> traj(points);
+  TrajectoryImpl<ObjectState2D> traj(points);
 
   auto state = traj.GetState(100);  // Out of bounds
   EXPECT_DOUBLE_EQ(state(0), 3.0);
@@ -56,7 +58,7 @@ TEST(TrajectoryTest, FromLineVectorReplacesStates) {
   std::vector<ObjectPosition2D> points1 = {
       (ObjectPosition2D() << 1.0, 2.0).finished(),
       (ObjectPosition2D() << 3.0, 4.0).finished()};
-  Trajectory<ObjectState2D> traj(points1);
+  TrajectoryImpl<ObjectState2D> traj(points1);
 
   std::vector<ObjectPosition2D> points2 = {
       (ObjectPosition2D() << 7.0, 8.0).finished()};
