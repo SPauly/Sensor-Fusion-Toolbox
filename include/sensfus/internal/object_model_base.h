@@ -139,11 +139,10 @@ class BasicVelocityModel : public ObjectModelBase<StateType> {
       if constexpr (this->kDim == 2) {
         state.segment<2>(1) = Vector2D(0, 0);
         state.segment<2>(2) = Vector2D(0, 0);
-      } else
-        constexpr {
-          state.segment<3>(1) = Vector3D(0, 0, 0);
-          state.segment<3>(2) = Vector3D(0, 0, 0);
-        }
+      } else {
+        state.segment<3>(1) = Vector3D(0, 0, 0);
+        state.segment<3>(2) = Vector3D(0, 0, 0);
+      }
     }
     return;
   }

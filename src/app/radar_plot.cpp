@@ -24,10 +24,14 @@ RadarPlot::RadarPlot(size_t id, std::shared_ptr<sim::SensorSimulator> sim,
 
 void RadarPlot::RunPlotInterface() {
   if (show_cartesian_) {
+    // small scatter points (visual clarity)
+    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 2.0f);
     ImPlot::PlotScatter(plot_cartesian_label_.c_str(), x_cartesian.data(),
                         y_cartesian.data(), (int)x_cartesian.size());
   }
   if (show_range_) {
+    // small scatter points (visual clarity)
+    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 2.0f);
     ImPlot::PlotScatter(plot_range_label_.c_str(), range_a_x_.data(),
                         range_a_y_.data(), (int)range_a_x_.size());
   }

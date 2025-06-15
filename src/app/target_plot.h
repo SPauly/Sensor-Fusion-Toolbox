@@ -37,6 +37,8 @@ class TargetPlot {
  private:
   std::shared_ptr<sim::SensorSimulator> sim_;
 
+  std::shared_ptr<const TrueTargetState2D> last_update_;
+
   // Safe the targets id at index i
   std::unordered_map<TargetIdType, size_t> id_of_target_at_index_;
 
