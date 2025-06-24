@@ -85,9 +85,9 @@ void RadarPlot::RunControllInterface() {
 
   ImGui::SliderFloat(std_cartesian_label_.c_str(), &stddev_cartesian_, 0.0f,
                      100.0f, "%.3f");
-  ImGui::SliderFloat(std_range_label_.c_str(), &stddev_range_, 0.0f, 10.0f,
+  ImGui::SliderFloat(std_range_label_.c_str(), &stddev_range_, 0.0f, 100.0f,
                      "%.3f");
-  ImGui::SliderFloat(std_azimuth_label_.c_str(), &stddev_azimuth_, 0.0f, 1.0f,
+  ImGui::SliderFloat(std_azimuth_label_.c_str(), &stddev_azimuth_, 0.0f, 2.0f,
                      "%.4f");
 
   ImGui::Text("Position Settings:");
