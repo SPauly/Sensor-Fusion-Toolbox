@@ -1,18 +1,22 @@
-#ifndef SENSFUS_SIM_OBJECT_MODEL_BASE_H
-#define SENSFUS_SIM_OBJECT_MODEL_BASE_H
+#ifndef SENSFUS_SIM_INTERNAL_OBJECT_MODEL_BASE_H
+#define SENSFUS_SIM_INTERNAL_OBJECT_MODEL_BASE_H
 
+#include <cmath>
 #include <memory>
 #include <vector>
 #include <mutex>
 
+#include <Eigen/Dense>
+
 #include "sensfus/types.h"
 
 namespace sensfus {
+namespace sim {
 namespace internal {
 template <typename StateType>
 class TrajectoryImpl;
-}
-namespace sim {
+}  // namespace internal
+
 class SensorSimulator;
 
 /// @brief Physics model for the object. This class is used to apply the
@@ -170,4 +174,4 @@ class BasicVelocityModel : public ObjectModelBase<StateType> {
 
 }  // namespace sensfus
 
-#endif  // SENSFUS_SIM_OBJECT_MODEL_BASE_H
+#endif  // SENSFUS_SIM_INTERNAL_OBJECT_MODEL_BASE_H

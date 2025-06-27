@@ -47,8 +47,53 @@ class KalmanFilterBase {
   virtual const std::vector<KalmanState<kDim>> Retrodict() = 0;
 };
 
-template <typename StateType, size_t kDim = 2>
-class GUIKalmanFilter : public KalmanFilterBase<StateType, kDim> {
+template <typename StateType>
+class KalmanFilter : public KalmanFilterBase<StateType> {
+  using typename KalmanFilterBase<StateType>::UpdateType;
+  static constexpr int kDim = KalmanFilterBase<StateType>::kDim;
+
+ public:
+  explicit KalmanFilter();
+  virtual ~KalmanFilter() = default;
+
+  const KalmanState<kDim> Predict() override;
+
+  const KalmanState<kDim> Update(const UpdateType& update) override;
+
+  const std::vector<KalmanState<kDim>> UpdateWithSmooth() override;
+
+  const std::vector<KalmanState<kDim>> Retrodict() override;
+
+ protected:
+  // not the best design but for simplicity, the derived classes will have
+  // access to the KalmanStates
+  std::vector<KalmanState<kDim>> states_;
+  std::vector<UpdateType> updates_;
+
+  KalmanState<kDim> current_state_, previous_state_;
+};
+
+template <typename StateType>
+class KalmanFilterWithEventBus : public KalmanFilter<StateType> {
+ public:
+  KalmanFilterWithEventBus() = default;
+  virtual ~KalmanFilterWithEventBus() = default;
+
+  // Override methods to integrate with the event bus
+  const KalmanState<KalmanFilterBase<StateType>::kDim> Predict() override;
+
+  const KalmanState<KalmanFilterBase<StateType>::kDim> Update(
+      const typename KalmanFilterBase<StateType>::UpdateType& update) override;
+
+  const std::vector<KalmanState<KalmanFilterBase<StateType>::kDim>>
+  UpdateWithSmooth() override;
+
+  const std::vector<KalmanState<KalmanFilterBase<StateType>::kDim>> Retrodict()
+      override;
+};
+
+template <typename StateType>
+class GUIKalmanFilter : public KalmanFilterBase<StateType> {
  public:
  private:
 };

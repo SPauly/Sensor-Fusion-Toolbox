@@ -1,9 +1,10 @@
-#ifndef SENSFUS_INTERNAL_SENSOR_BASE_H
-#define SENSFUS_INTERNAL_SENSOR_BASE_H
+#ifndef SENSFUS_SIM_INTERNAL_SENSOR_BASE_H
+#define SENSFUS_SIM_INTERNAL_SENSOR_BASE_H
 
 #include "sensfus/types.h"
 
 namespace sensfus {
+namespace sim {
 namespace internal {
 
 template <typename StateType = ObjectState2D>
@@ -32,6 +33,7 @@ class SensorBase {
 };
 }  // namespace internal
 
+}  // namespace sim
 }  // namespace sensfus
 
-#endif  // SENSFUS_INTERNAL_SENSOR_BASE_H
+#endif  // SENSFUS_SIM_INTERNAL_SENSOR_BASE_H

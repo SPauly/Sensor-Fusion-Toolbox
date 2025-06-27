@@ -8,11 +8,11 @@
 
 #include "sensfus/types.h"
 #include "sensfus/utils/eventbus.h"
-#include "sensfus/internal/sim_base.h"
+#include "sensfus/sim/internal/sim_base.h"
 #include "sensfus/sim/sensor_radar.h"
 #include "sensfus/sim/object_model.h"
 #include "sensfus/sim/trajectory.h"
-#include "sensfus/internal/trajectory_impl.h"
+#include "sensfus/sim/internal/trajectory_impl.h"
 
 namespace sensfus {
 namespace sim {

@@ -8,7 +8,7 @@
 
 #include "sensfus/types.h"
 #include "sensfus/utils/eventbus.h"
-#include "sensfus/internal/sensor_base.h"
+#include "sensfus/sim/internal/sensor_base.h"
 
 namespace sensfus {
 namespace sim {
