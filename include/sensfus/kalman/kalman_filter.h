@@ -5,6 +5,7 @@
 #include <ctime>
 
 #include "sensfus/types.h"
+#include "sensfus/kalman/evolution_model.h"
 
 namespace sensfus {
 
@@ -16,8 +17,9 @@ using TimeStep = long long;
 template <size_t kDim = 2>
 struct KalmanState {
   /// TODO: static_Assert that StateType is of type Eigen::MatrixXD
-  Eigen::Matrix<ScalarType, kDim * 3, 1> x;
-  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;
+  Eigen::Matrix<ScalarType, kDim * 3, 1>
+      x;  // State vector: position, velocity, acceleration
+  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
 
   TimeStamp k_timestamp;
 };
@@ -45,6 +47,8 @@ class KalmanFilterBase {
   virtual const KalmanState<kDim> Update(const UpdateType& update) = 0;
   virtual const std::vector<KalmanState<kDim>> UpdateWithSmooth() = 0;
   virtual const std::vector<KalmanState<kDim>> Retrodict() = 0;
+
+  virtual const EvolutionModel<kDim>& GetEvolutionModel() = 0;
 };
 
 template <typename StateType>
@@ -64,13 +68,19 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
 
   const std::vector<KalmanState<kDim>> Retrodict() override;
 
+  const EvolutionModel<kDim>& GetEvolutionModel() override {
+    return evolution_model_;
+  }
+
  protected:
   // not the best design but for simplicity, the derived classes will have
   // access to the KalmanStates
   std::vector<KalmanState<kDim>> states_;
   std::vector<UpdateType> updates_;
 
-  KalmanState<kDim> current_state_, previous_state_;
+  KalmanState<kDim> xk_, previous_state_;
+
+  EvolutionModel<kDim> evolution_model_;
 };
 
 template <typename StateType>
@@ -78,18 +88,6 @@ class KalmanFilterWithEventBus : public KalmanFilter<StateType> {
  public:
   KalmanFilterWithEventBus() = default;
   virtual ~KalmanFilterWithEventBus() = default;
-
-  // Override methods to integrate with the event bus
-  const KalmanState<KalmanFilterBase<StateType>::kDim> Predict() override;
-
-  const KalmanState<KalmanFilterBase<StateType>::kDim> Update(
-      const typename KalmanFilterBase<StateType>::UpdateType& update) override;
-
-  const std::vector<KalmanState<KalmanFilterBase<StateType>::kDim>>
-  UpdateWithSmooth() override;
-
-  const std::vector<KalmanState<KalmanFilterBase<StateType>::kDim>> Retrodict()
-      override;
 };
 
 template <typename StateType>
@@ -103,3 +101,5 @@ class GUIKalmanFilter : public KalmanFilterBase<StateType> {
 }  // namespace sensfus
 
 #endif  // SENSFUS_KALMAN_KALMAN_FILTER_H
+
+#include "sensfus/kalman/kalman_filter.ipp"

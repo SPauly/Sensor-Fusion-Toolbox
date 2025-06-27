@@ -1,13 +1,19 @@
 #ifndef SENSFUS_KALMAN_EVOLUTION_MODEL_H
 #define SENSFUS_KALMAN_EVOLUTION_MODEL_H
 
-#include <Eigen/Dense>
 #include <cmath>
+#include <memory>
+#include <vector>
+
+#include <Eigen/Dense>
 
 #include "sensfus/types.h"
 
 namespace sensfus {
 namespace kalman {
+template <size_t Dim>
+class MultipleModels;  // Forward declaration
+
 template <size_t Dim>
 struct EvolutionModel {
   static_assert(Dim == 2 || Dim == 3,
@@ -16,24 +22,26 @@ struct EvolutionModel {
   static constexpr size_t kDim =
       Dim * 3;  // State vector size: position, velocity, acceleration
 
-  const std::vector<Eigen::Matrix<ScalarType, kDim, kDim>> kF;
-  const std::vector<Eigen::Matrix<ScalarType, kDim, kDim>> kD;
+  // F is the state transition matrix
+  Eigen::Matrix<ScalarType, kDim, kDim> F;
+  // D is the process noise covariance matrix
+  Eigen::Matrix<ScalarType, kDim, kDim> D;
 
-  // true if F and D are multidimensional e.g. support multiple states
-  const bool kSupport_mh_sates;
   const double kT_seconds;             // Time step in seconds
   const double kProcessNoiseVariance;  // Process noise variance for the model
+                                       // to 1)
+  const bool kSupport_mh_states;
+
+  MultipleModels<Dim> states;  // Multiple models for MH states
 
   // Standard Constructor uses piecewise constant white acceleration Model
   EvolutionModel(const double time_step_seconds = 0.05,
                  const double noise_variance = 0.01,
                  const bool support_multidimensional_states = false)
-      : kSupport_mh_sates(support_multidimensional_states),
+      : kSupport_mh_states(support_multidimensional_states),
         kT_seconds(time_step_seconds),
         kProcessNoiseVariance(noise_variance) {
     // Evolution Model -> F(I Tk 0.5*Tk^2, 0 I Tk, 0 0 I)
-
-    Eigen::Matrix<ScalarType, kDim, kDim> F;
     Eigen::Matrix<ScalarType, Dim, Dim> I;
 
     F.setZero();
@@ -48,10 +56,7 @@ struct EvolutionModel {
     F.block<Dim, Dim>(2 * Dim, 2 * Dim) =
         I;  // Identity matrix for acceleration
 
-    kF = {F};
-
     // Constant Acceleration Rates D = noise^2(complecated stuff)
-    Eigen::Matrix<ScalarType, kDim, kDim> D;
     D.setZero();
 
     double q = kProcessNoiseVariance * kProcessNoiseVariance;
@@ -66,9 +71,16 @@ struct EvolutionModel {
     D.block<Dim, Dim>(2 * Dim, 0) = 0.5 * kT_seconds * kT_seconds * q * I;
     D.block<Dim, Dim>(2 * Dim, Dim) = kT_seconds * q * I;
     D.block<Dim, Dim>(2 * Dim, 2 * Dim) = q * I;
-
-    kD = {D};
   }
+};
+
+template <size_t Dim>
+class MultipleModels {
+ private:
+  // if kSupport_mh_states is true, then we need to store the next states
+  // together with the probability of the next state
+  std::vector<std::pair<EvolutionModel<Dim>, double>>
+      next_states;  // Next states with their probabilities (probabilities sum
 };
 
 }  // namespace kalman
