@@ -15,65 +15,89 @@ template <size_t Dim>
 class MultipleModels;  // Forward declaration
 
 template <size_t Dim>
-struct EvolutionModel {
+class EvolutionModel {
   static_assert(Dim == 2 || Dim == 3,
                 "EvolutionModel only supported for 2D and 3D");
 
-  static constexpr size_t kDim =
-      Dim * 3;  // State vector size: position, velocity, acceleration
+ public:
+  static constexpr size_t kDim = Dim * 3;  // State vector size: pos, vel, acc
 
-  // F is the state transition matrix
-  Eigen::Matrix<ScalarType, kDim, kDim> F;
-  // D is the process noise covariance matrix
-  Eigen::Matrix<ScalarType, kDim, kDim> D;
+  EvolutionModel(double time_step_seconds = 0.05, double noise_variance = 0.01,
+                 bool support_multi_models = false)
+      : kT_seconds_(time_step_seconds),
+        kProcessNoiseVariance_(noise_variance),
+        kSupport_mh_states_(support_multi_models) {
+    UpdateMatrices();
+  }
 
-  const double kT_seconds;             // Time step in seconds
-  const double kProcessNoiseVariance;  // Process noise variance for the model
-                                       // to 1)
-  const bool kSupport_mh_states;
+  void SetDeltaTime(double time_step_seconds) {
+    if (time_step_seconds == kT_seconds_) {
+      return;  // No change needed
+    }
+    kT_seconds_ = time_step_seconds;
+    UpdateMatrices();
+  }
 
-  MultipleModels<Dim> states;  // Multiple models for MH states
+  void SetProcessNoiseVariance(double noise_variance) {
+    kProcessNoiseVariance_ = noise_variance;
+    UpdateMatrices();
+  }
 
-  // Standard Constructor uses piecewise constant white acceleration Model
-  EvolutionModel(const double time_step_seconds = 0.05,
-                 const double noise_variance = 0.01,
-                 const bool support_multidimensional_states = false)
-      : kSupport_mh_states(support_multidimensional_states),
-        kT_seconds(time_step_seconds),
-        kProcessNoiseVariance(noise_variance) {
-    // Evolution Model -> F(I Tk 0.5*Tk^2, 0 I Tk, 0 0 I)
+  double GetDeltaTime() const { return kT_seconds_; }
+  double GetProcessNoiseVariance() const { return kProcessNoiseVariance_; }
+  bool SupportsMultiModels() const { return kSupport_mh_states_; }
+
+  const Eigen::Matrix<ScalarType, kDim, kDim>& F() const { return F_; }
+  const Eigen::Matrix<ScalarType, kDim, kDim>& D() const { return D_; }
+
+ private:
+  void UpdateMatrices() {
+    // Evolution Model -> F_(I Tk 0.5*Tk^2, 0 I Tk, 0 0 I)
     Eigen::Matrix<ScalarType, Dim, Dim> I;
 
-    F.setZero();
+    F_.setZero();
 
-    F.block<Dim, Dim>(0, 0) = I;                 // Identity matrix for position
-    F.block<Dim, Dim>(0, Dim) = kT_seconds * I;  // Position to velocity
-    F.block<Dim, Dim>(0, 2 * Dim) =
+    F_.block<Dim, Dim>(0, 0) = I;  // Identity matrix for position
+    F_.block<Dim, Dim>(0, Dim) = kT_seconds * I;  // Position to velocity
+    F_.block<Dim, Dim>(0, 2 * Dim) =
         0.5 * kT_seconds * kT_seconds * I;  // Position to acceleration
-    F.block<Dim, Dim>(Dim, Dim) = I;        // Identity matrix for velocity
-    F.block<Dim, Dim>(Dim, 2 * Dim) =
+    F_.block<Dim, Dim>(Dim, Dim) = I;       // Identity matrix for velocity
+    F_.block<Dim, Dim>(Dim, 2 * Dim) =
         kT_seconds * I;  // Velocity to acceleration
-    F.block<Dim, Dim>(2 * Dim, 2 * Dim) =
+    F_.block<Dim, Dim>(2 * Dim, 2 * Dim) =
         I;  // Identity matrix for acceleration
 
     // Constant Acceleration Rates D = noise^2(complecated stuff)
-    D.setZero();
+    D_.setZero();
 
     double q = kProcessNoiseVariance * kProcessNoiseVariance;
-    D.block<Dim, Dim>(0, 0) = 0.25 * std::pow(kT_seconds, 4) * q * I;
-    D.block<Dim, Dim>(0, Dim) = 0.5 * std::pow(kT_seconds, 3) * q * I;
-    D.block<Dim, Dim>(0, 2 * Dim) = 0.5 * kT_seconds * kT_seconds * q * I;
+    D_.block<Dim, Dim>(0, 0) = 0.25 * std::pow(kT_seconds, 4) * q * I;
+    D_.block<Dim, Dim>(0, Dim) = 0.5 * std::pow(kT_seconds, 3) * q * I;
+    D_.block<Dim, Dim>(0, 2 * Dim) = 0.5 * kT_seconds * kT_seconds * q * I;
 
-    D.block<Dim, Dim>(Dim, 0) = 0.5 * std::pow(kT_seconds, 3) * q * I;
-    D.block<Dim, Dim>(Dim, Dim) = kT_seconds * kT_seconds * q * I;
-    D.block<Dim, Dim>(Dim, 2 * Dim) = kT_seconds * q * I;
+    D_.block<Dim, Dim>(Dim, 0) = 0.5 * std::pow(kT_seconds, 3) * q * I;
+    D_.block<Dim, Dim>(Dim, Dim) = kT_seconds * kT_seconds * q * I;
+    D_.block<Dim, Dim>(Dim, 2 * Dim) = kT_seconds * q * I;
 
-    D.block<Dim, Dim>(2 * Dim, 0) = 0.5 * kT_seconds * kT_seconds * q * I;
-    D.block<Dim, Dim>(2 * Dim, Dim) = kT_seconds * q * I;
-    D.block<Dim, Dim>(2 * Dim, 2 * Dim) = q * I;
+    D_.block<Dim, Dim>(2 * Dim, 0) = 0.5 * kT_seconds * kT_seconds * q * I;
+    D_.block<Dim, Dim>(2 * Dim, Dim) = kT_seconds * q * I;
+    D_.block<Dim, Dim>(2 * Dim, 2 * Dim) = q * I;
   }
+
+ private:
+  double kT_seconds_;
+  double kProcessNoiseVariance_;
+  const bool kSupport_mh_states_;
+
+  Eigen::Matrix<ScalarType, kDim, kDim> F_;
+  Eigen::Matrix<ScalarType, kDim, kDim> D_;
+
+  MultipleModels<Dim> states_;  // Multiple models for MM states
 };
 
+/// @brief Class to handle multiple models for the evolution model.
+/// This class is used to store the next states with their probabilities.
+/// TODO: Implement this class to handle multiple models for the evolution
 template <size_t Dim>
 class MultipleModels {
  private:

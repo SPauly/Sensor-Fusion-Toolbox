@@ -1,8 +1,10 @@
 #ifndef SENSFUS_KALMAN_KALMAN_FILTER_H
 #define SENSFUS_KALMAN_KALMAN_FILTER_H
 
-#include <Eigen/Dense>
+#include <concepts>
 #include <ctime>
+
+#include <Eigen/Dense>
 
 #include "sensfus/types.h"
 #include "sensfus/kalman/evolution_model.h"
@@ -24,7 +26,14 @@ struct KalmanState {
   TimeStamp k_timestamp;
 };
 
-template <typename StateType>
+// Define a concept for KalmanStateType so that we can ensure that only
+// ObjectState2D or ObjectState3D can be used as StateType in KalmanFilterBase
+// and KalmanFilter
+template <typename T>
+concept KalmanStateType =
+    std::same_as<T, ObjectState2D> || std::same_as<T, ObjectState3D>;
+
+template <KalmanStateType StateType>
 class KalmanFilterBase {
   // Ensure StateType is either ObjectState2D or ObjectState3D
   static_assert(std::is_same<StateType, ObjectState2D>::value ||
@@ -32,26 +41,26 @@ class KalmanFilterBase {
                 "StateType must be ObjectState2D or ObjectState3D");
 
   // Determine the dimension of the object state based on the type
-  static constexpr int kDim =
-      std::is_same<StateType, ObjectState2D>::value ? 2 : 3;
+  static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
 
-  using UpdateType =
-      std::conditional_t<std::is_same<StateType, ObjectState2D>::value,
-                         ObjectPosition2D, ObjectPosition3D>;
+  using UpdateType = std::conditional_t<std::same_as<StateType, ObjectState2D>,
+                                        ObjectPosition2D, ObjectPosition3D>;
 
  public:
   explicit KalmanFilterBase() = default;
   virtual ~KalmanFilterBase() = default;
 
-  virtual const KalmanState<kDim> Predict() = 0;
-  virtual const KalmanState<kDim> Update(const UpdateType& update) = 0;
-  virtual const std::vector<KalmanState<kDim>> UpdateWithSmooth() = 0;
+  virtual const KalmanState<kDim> Predict(const TimeStamp& time) = 0;
+  virtual const KalmanState<kDim> Update(const UpdateType& update,
+                                         const TimeStamp& time) = 0;
+  virtual const std::vector<KalmanState<kDim>> UpdateWithSmooth(
+      const UpdateType& update, const TimeStamp& time) = 0;
   virtual const std::vector<KalmanState<kDim>> Retrodict() = 0;
 
-  virtual const EvolutionModel<kDim>& GetEvolutionModel() = 0;
+  virtual const EvolutionModel<kDim>& GetEvolutionModel() const = 0;
 };
 
-template <typename StateType>
+template <KalmanStateType StateType, bool UseSimulatedTime = false>
 class KalmanFilter : public KalmanFilterBase<StateType> {
   using typename KalmanFilterBase<StateType>::UpdateType;
   static constexpr int kDim = KalmanFilterBase<StateType>::kDim;
@@ -60,37 +69,43 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
   explicit KalmanFilter();
   virtual ~KalmanFilter() = default;
 
-  const KalmanState<kDim> Predict() override;
+  virtual const KalmanState<kDim> Predict(const TimeStamp& time) override;
 
-  const KalmanState<kDim> Update(const UpdateType& update) override;
+  virtual const KalmanState<kDim> Update(const UpdateType& update,
+                                         const TimeStamp& time) override {}
+  virtual const std::vector<KalmanState<kDim>> UpdateWithSmooth(
+      const UpdateType& update, const TimeStamp& time) override {}
 
-  const std::vector<KalmanState<kDim>> UpdateWithSmooth() override;
+  virtual const std::vector<KalmanState<kDim>> Retrodict() override {}
 
-  const std::vector<KalmanState<kDim>> Retrodict() override;
-
-  const EvolutionModel<kDim>& GetEvolutionModel() override {
+  virtual const EvolutionModel<kDim>& GetEvolutionModel() const override {
     return evolution_model_;
   }
 
  protected:
   // not the best design but for simplicity, the derived classes will have
   // access to the KalmanStates
-  std::vector<KalmanState<kDim>> states_;
-  std::vector<UpdateType> updates_;
 
-  KalmanState<kDim> xk_, previous_state_;
+  std::vector<KalmanState<kDim>> states_;
+  std::vector<UpdateType> updates_;  // Store the updates for eventual smoothing
+
+  KalmanState<kDim> xk_;  // Current state
 
   EvolutionModel<kDim> evolution_model_;
+
+  // Metadata
+  double time_between_simulated_points_s_ =
+      0.05;  // Default time step in seconds
 };
 
-template <typename StateType>
+template <KalmanStateType StateType>
 class KalmanFilterWithEventBus : public KalmanFilter<StateType> {
  public:
   KalmanFilterWithEventBus() = default;
   virtual ~KalmanFilterWithEventBus() = default;
 };
 
-template <typename StateType>
+template <KalmanStateType StateType>
 class GUIKalmanFilter : public KalmanFilterBase<StateType> {
  public:
  private:

@@ -24,6 +24,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Eigen)
 
 #----------------------------------#
+# Create kalmanlib library
+#----------------------------------#
+
+add_library(kalmanlib INTERFACE)
+
+target_include_directories(kalmanlib INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
+target_link_libraries(kalmanlib INTERFACE Eigen3::Eigen)
+
+#----------------------------------#
 # Create senssimlib library
 #----------------------------------#
 
@@ -77,6 +90,7 @@ target_include_directories(SensorSimulator PRIVATE
 
 target_link_libraries(SensorSimulator PRIVATE
    senssimlib
+   kalmanlib
    ${TARGET_LIBRARIES}
    Eigen3::Eigen
 )
