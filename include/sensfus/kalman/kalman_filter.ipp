@@ -8,7 +8,8 @@ namespace sensfus {
 namespace kalman {
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
-KalmanFilter<StateType>::KalmanFilter() : evolution_model_(0.05, 0.01, false) {
+KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
+    : evolution_model_(0.05, 0.01, false) {
   // Initialize the Kalman filter with default parameters
   states_.clear();
   updates_.clear();
@@ -31,6 +32,7 @@ KalmanFilter<StateType>::KalmanFilter() : evolution_model_(0.05, 0.01, false) {
   states_.push_back(xk_);
 }
 
+template <KalmanStateType StateType, bool UseSimulatedTime>
 const KalmanState<kDim> KalmanFilter<StateType, UseSimulatedTime>::Predict(
     const TimeStamp& time) {
   KalmanState<kDim> prev = xk_;
