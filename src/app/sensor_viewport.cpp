@@ -21,9 +21,10 @@ void SensorViewport::OnDetach() {}
 void SensorViewport::OnUIRender() {
   ImGui::Begin("Sensor Fusion Viewport");
 
-  ImPlot::SetNextAxesLimits(-300, 300, -300, 300, ImGuiCond_Once);
+  ImPlot::SetNextAxesLimits(-10000, 10000, -10000, 10000,
+                            ImGuiCond_Once);  // Set larger plot limits
 
-  if (ImPlot::BeginPlot("Fused Sensor Plot")) {
+  if (ImPlot::BeginPlot("Fused Sensor Plot"), (350, 550)) {
     // Call all registered sensor plot callbacks
     for (size_t i = 0; i < plot_callbacks_.size(); i++) {
       if (suspendet_[i].second) plot_callbacks_[i].second();

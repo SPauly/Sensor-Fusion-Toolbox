@@ -13,7 +13,7 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   // Initialize the Kalman filter with default parameters
   states_.clear();
   updates_.clear();
-  xk_ = KalmanState<kDim>();
+  xk_ = KalmanState<StateType>();
 
   // Initialize the current state to 0 and add a large covariance
   xk_.x.setZero();
@@ -33,10 +33,10 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
 }
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
-const KalmanState<kDim> KalmanFilter<StateType, UseSimulatedTime>::Predict(
+const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
     const TimeStamp& time) {
-  KalmanState<kDim> prev = xk_;
-  KalmanState<kDim> curr;
+  KalmanState<StateType> prev = xk_;
+  KalmanState<StateType> curr;
 
   // Check if the time is valid or whether we want to rerun a previous
   // prediction
@@ -44,14 +44,14 @@ const KalmanState<kDim> KalmanFilter<StateType, UseSimulatedTime>::Predict(
     // search for the last valid state before the given time (use binary search)
     auto lower = std::lower_bound(
         states_.begin(), states_.end(), time,
-        [](const KalmanState<kDim>& state, const TimeStamp& t) {
+        [](const KalmanState<StateType>& state, const TimeStamp& t) {
           return state.k_timestamp < t;
         });
 
     if (lower != states_.end())
       prev = *lower;
     else
-      prev = states.front();  // return first state if no valid state found
+      prev = states_.front();  // return first state if no valid state found
   }
 
   // Predict the next state using the evolution model

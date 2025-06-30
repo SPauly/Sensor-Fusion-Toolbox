@@ -16,16 +16,6 @@ namespace kalman {
 using TimeStamp = size_t;
 using TimeStep = long long;
 
-template <size_t kDim = 2>
-struct KalmanState {
-  /// TODO: static_Assert that StateType is of type Eigen::MatrixXD
-  Eigen::Matrix<ScalarType, kDim * 3, 1>
-      x;  // State vector: position, velocity, acceleration
-  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
-
-  TimeStamp k_timestamp;
-};
-
 // Define a concept for KalmanStateType so that we can ensure that only
 // ObjectState2D or ObjectState3D can be used as StateType in KalmanFilterBase
 // and KalmanFilter
@@ -34,15 +24,26 @@ concept KalmanStateType =
     std::same_as<T, ObjectState2D> || std::same_as<T, ObjectState3D>;
 
 template <KalmanStateType StateType>
+struct KalmanState {
+  static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
+
+  /// TODO: static_Assert that StateType is of type Eigen::MatrixXD
+  Eigen::Matrix<ScalarType, kDim * 3, 1>
+      x;  // State vector: position, velocity, acceleration
+  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
+
+  TimeStamp k_timestamp;
+};
+
+template <KalmanStateType StateType>
 class KalmanFilterBase {
   // Ensure StateType is either ObjectState2D or ObjectState3D
   static_assert(std::is_same<StateType, ObjectState2D>::value ||
                     std::is_same<StateType, ObjectState3D>::value,
                 "StateType must be ObjectState2D or ObjectState3D");
 
-  // Determine the dimension of the object state based on the type
+ protected:
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
-
   using UpdateType = std::conditional_t<std::same_as<StateType, ObjectState2D>,
                                         ObjectPosition2D, ObjectPosition3D>;
 
@@ -50,46 +51,60 @@ class KalmanFilterBase {
   explicit KalmanFilterBase() = default;
   virtual ~KalmanFilterBase() = default;
 
-  virtual const KalmanState<kDim> Predict(const TimeStamp& time) = 0;
-  virtual const KalmanState<kDim> Update(const UpdateType& update,
-                                         const TimeStamp& time) = 0;
-  virtual const std::vector<KalmanState<kDim>> UpdateWithSmooth(
+  virtual const KalmanState<StateType> Predict(const TimeStamp& time) = 0;
+  virtual const KalmanState<StateType> Update(const UpdateType& update,
+                                              const TimeStamp& time) = 0;
+  virtual const std::vector<KalmanState<StateType>> UpdateWithSmooth(
       const UpdateType& update, const TimeStamp& time) = 0;
-  virtual const std::vector<KalmanState<kDim>> Retrodict() = 0;
+  virtual const std::vector<KalmanState<StateType>> Retrodict() = 0;
 
   virtual const EvolutionModel<kDim>& GetEvolutionModel() const = 0;
 };
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
 class KalmanFilter : public KalmanFilterBase<StateType> {
-  using typename KalmanFilterBase<StateType>::UpdateType;
-  static constexpr int kDim = KalmanFilterBase<StateType>::kDim;
+  using UpdateType = std::conditional_t<std::same_as<StateType, ObjectState2D>,
+                                        ObjectPosition2D, ObjectPosition3D>;
+  static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
 
  public:
   explicit KalmanFilter();
   virtual ~KalmanFilter() = default;
 
-  virtual const KalmanState<kDim> Predict(const TimeStamp& time) override;
+  virtual const KalmanState<StateType> Predict(const TimeStamp& time) override;
 
-  virtual const KalmanState<kDim> Update(const UpdateType& update,
-                                         const TimeStamp& time) override {}
-  virtual const std::vector<KalmanState<kDim>> UpdateWithSmooth(
-      const UpdateType& update, const TimeStamp& time) override {}
+  virtual const KalmanState<StateType> Update(const UpdateType& update,
+                                              const TimeStamp& time) override {
+    return KalmanState<StateType>();
+  }
+  virtual const std::vector<KalmanState<StateType>> UpdateWithSmooth(
+      const UpdateType& update, const TimeStamp& time) override {
+    return std::vector<KalmanState<StateType>>();
+  }
 
-  virtual const std::vector<KalmanState<kDim>> Retrodict() override {}
+  virtual const std::vector<KalmanState<StateType>> Retrodict() override {
+    return std::vector<KalmanState<StateType>>();
+  }
 
   virtual const EvolutionModel<kDim>& GetEvolutionModel() const override {
     return evolution_model_;
+  }
+
+  void SetTimeBetweenSimulatedPoints(double time_between_simulated_points_s) {
+    time_between_simulated_points_s_ = time_between_simulated_points_s;
+
+    // Update the evolution model with the new time step
+    evolution_model_.SetDeltaTime(time_between_simulated_points_s_);
   }
 
  protected:
   // not the best design but for simplicity, the derived classes will have
   // access to the KalmanStates
 
-  std::vector<KalmanState<kDim>> states_;
+  std::vector<KalmanState<StateType>> states_;
   std::vector<UpdateType> updates_;  // Store the updates for eventual smoothing
 
-  KalmanState<kDim> xk_;  // Current state
+  KalmanState<StateType> xk_;  // Current state
 
   EvolutionModel<kDim> evolution_model_;
 

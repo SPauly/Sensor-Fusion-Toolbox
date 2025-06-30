@@ -58,29 +58,29 @@ class EvolutionModel {
     F_.setZero();
 
     F_.block<Dim, Dim>(0, 0) = I;  // Identity matrix for position
-    F_.block<Dim, Dim>(0, Dim) = kT_seconds * I;  // Position to velocity
+    F_.block<Dim, Dim>(0, Dim) = kT_seconds_ * I;  // Position to velocity
     F_.block<Dim, Dim>(0, 2 * Dim) =
-        0.5 * kT_seconds * kT_seconds * I;  // Position to acceleration
-    F_.block<Dim, Dim>(Dim, Dim) = I;       // Identity matrix for velocity
+        0.5 * kT_seconds_ * kT_seconds_ * I;  // Position to acceleration
+    F_.block<Dim, Dim>(Dim, Dim) = I;         // Identity matrix for velocity
     F_.block<Dim, Dim>(Dim, 2 * Dim) =
-        kT_seconds * I;  // Velocity to acceleration
+        kT_seconds_ * I;  // Velocity to acceleration
     F_.block<Dim, Dim>(2 * Dim, 2 * Dim) =
         I;  // Identity matrix for acceleration
 
     // Constant Acceleration Rates D = noise^2(complecated stuff)
     D_.setZero();
 
-    double q = kProcessNoiseVariance * kProcessNoiseVariance;
-    D_.block<Dim, Dim>(0, 0) = 0.25 * std::pow(kT_seconds, 4) * q * I;
-    D_.block<Dim, Dim>(0, Dim) = 0.5 * std::pow(kT_seconds, 3) * q * I;
-    D_.block<Dim, Dim>(0, 2 * Dim) = 0.5 * kT_seconds * kT_seconds * q * I;
+    double q = kProcessNoiseVariance_ * kProcessNoiseVariance_;
+    D_.block<Dim, Dim>(0, 0) = 0.25 * std::pow(kT_seconds_, 4) * q * I;
+    D_.block<Dim, Dim>(0, Dim) = 0.5 * std::pow(kT_seconds_, 3) * q * I;
+    D_.block<Dim, Dim>(0, 2 * Dim) = 0.5 * kT_seconds_ * kT_seconds_ * q * I;
 
-    D_.block<Dim, Dim>(Dim, 0) = 0.5 * std::pow(kT_seconds, 3) * q * I;
-    D_.block<Dim, Dim>(Dim, Dim) = kT_seconds * kT_seconds * q * I;
-    D_.block<Dim, Dim>(Dim, 2 * Dim) = kT_seconds * q * I;
+    D_.block<Dim, Dim>(Dim, 0) = 0.5 * std::pow(kT_seconds_, 3) * q * I;
+    D_.block<Dim, Dim>(Dim, Dim) = kT_seconds_ * kT_seconds_ * q * I;
+    D_.block<Dim, Dim>(Dim, 2 * Dim) = kT_seconds_ * q * I;
 
-    D_.block<Dim, Dim>(2 * Dim, 0) = 0.5 * kT_seconds * kT_seconds * q * I;
-    D_.block<Dim, Dim>(2 * Dim, Dim) = kT_seconds * q * I;
+    D_.block<Dim, Dim>(2 * Dim, 0) = 0.5 * kT_seconds_ * kT_seconds_ * q * I;
+    D_.block<Dim, Dim>(2 * Dim, Dim) = kT_seconds_ * q * I;
     D_.block<Dim, Dim>(2 * Dim, 2 * Dim) = q * I;
   }
 
@@ -89,8 +89,8 @@ class EvolutionModel {
   double kProcessNoiseVariance_;
   const bool kSupport_mh_states_;
 
-  Eigen::Matrix<ScalarType, kDim, kDim> F_;
-  Eigen::Matrix<ScalarType, kDim, kDim> D_;
+  Eigen::Matrix<ScalarType, kDim, kDim> F_;  // State transition matrix
+  Eigen::Matrix<ScalarType, kDim, kDim> D_;  // Dynamics noise matrix
 
   MultipleModels<Dim> states_;  // Multiple models for MM states
 };

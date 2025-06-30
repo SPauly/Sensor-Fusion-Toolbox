@@ -17,12 +17,17 @@
 #endif
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 
+#include "sensfus/types.h"
+#include "sensfus/kalman/kalman_filter.h"
+
 namespace sensfus {
 namespace app {
 SensorSim::SensorSim()
     : ApplicationBase(),
       sim_(std::make_shared<sim::SensorSimulator>()),
-      target_plot_(TargetPlot(sim_)) {}
+      target_plot_(TargetPlot(sim_)) {
+  sensfus::kalman::KalmanFilter<sensfus::ObjectState2D> kf;
+}
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && \
     !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
