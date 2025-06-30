@@ -20,7 +20,8 @@ class EvolutionModel {
                 "EvolutionModel only supported for 2D and 3D");
 
  public:
-  static constexpr size_t kDim = Dim * 3;  // State vector size: pos, vel, acc
+  static constexpr size_t kDim =
+      Dim * 3;  // Dim*3 bc: State vector size: pos, vel, acc
 
   EvolutionModel(double time_step_seconds = 0.05, double noise_variance = 0.01,
                  bool support_multi_models = false)

@@ -23,6 +23,11 @@ template <typename T>
 concept KalmanStateType =
     std::same_as<T, ObjectState2D> || std::same_as<T, ObjectState3D>;
 
+/// @brief Contains the state vector and covariance matrix for the current state
+/// as perceived by the Kalman filter. This might be used for both prediction
+/// and updates steps.
+/// @tparam StateType Either ObjectState2D or ObjectState3D. -> The siz of the
+/// state vector is determined by the StateType and stored in kDim.
 template <KalmanStateType StateType>
 struct KalmanState {
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
@@ -33,6 +38,21 @@ struct KalmanState {
   Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
 
   TimeStamp k_timestamp;
+
+  size_t index_metadata =
+      0;  // Index in the metadata vector, used for updates/filtering
+};
+
+template <KalmanStateType StateType>
+struct KalmanStateMetadata {
+  static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
+  TimeStamp k_timestamp;  // Timestamp of the state
+
+  Eigen::Matrix<ScalarType, kDim, 1> innovation;  // Innovation vector
+  Eigen::Matrix<ScalarType, kDim, kDim>
+      inv_covariance;  // Innovation covariance
+
+  Eigen::Matrix<ScalarType, kDim, kDim> kalman_gain;  // Kalman gain
 };
 
 template <KalmanStateType StateType>
@@ -102,9 +122,14 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
   // access to the KalmanStates
 
   std::vector<KalmanState<StateType>> states_;
+  std::vector<KalmanStateMetadata<StateType>> states_metadata_;
   std::vector<UpdateType> updates_;  // Store the updates for eventual smoothing
 
   KalmanState<StateType> xk_;  // Current state
+
+  /// TODO: think about how to handle the case of arriving updates -> Problem:
+  /// Filter has higher update rate so the simulated time does not work. updates
+  /// will arrive with deprecated timestamps
 
   EvolutionModel<kDim> evolution_model_;
 
