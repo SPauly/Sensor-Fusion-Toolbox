@@ -32,7 +32,6 @@ template <KalmanStateType StateType>
 struct KalmanState {
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
 
-  /// TODO: static_Assert that StateType is of type Eigen::MatrixXD
   Eigen::Matrix<ScalarType, kDim * 3, 1>
       x;  // State vector: position, velocity, acceleration
   Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
@@ -46,7 +45,8 @@ struct KalmanState {
 template <KalmanStateType StateType>
 struct KalmanStateMetadata {
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
-  TimeStamp k_timestamp;  // Timestamp of the state
+  TimeStamp k_timestamp;      // Timestamp of the state
+  KalmanState<StateType> xk;  // State vector and covariance
 
   Eigen::Matrix<ScalarType, kDim, 1> innovation;  // Innovation vector
   Eigen::Matrix<ScalarType, kDim, kDim>
@@ -94,9 +94,8 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
   virtual const KalmanState<StateType> Predict(const TimeStamp& time) override;
 
   virtual const KalmanState<StateType> Update(const UpdateType& update,
-                                              const TimeStamp& time) override {
-    return KalmanState<StateType>();
-  }
+                                              const TimeStamp& time) override;
+
   virtual const std::vector<KalmanState<StateType>> UpdateWithSmooth(
       const UpdateType& update, const TimeStamp& time) override {
     return std::vector<KalmanState<StateType>>();
@@ -122,10 +121,13 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
   // access to the KalmanStates
 
   std::vector<KalmanState<StateType>> states_;
-  std::vector<KalmanStateMetadata<StateType>> states_metadata_;
+  std::vector<KalmanStateMetadata<StateType>> updated_states_;
   std::vector<UpdateType> updates_;  // Store the updates for eventual smoothing
 
   KalmanState<StateType> xk_;  // Current state
+  KalmanStateMetadata<StateType>
+      xk_update_;  // Metadata for the current state -> this must not match xk
+                   // since it only referes to the updated step
 
   /// TODO: think about how to handle the case of arriving updates -> Problem:
   /// Filter has higher update rate so the simulated time does not work. updates
@@ -136,6 +138,11 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
   // Metadata
   double time_between_simulated_points_s_ =
       0.05;  // Default time step in seconds
+
+  // Helpers:
+  Eigen::Matrix<ScalarType, kDim * 3, kDim> H_;  // Measurement matrix
+  Eigen::Matrix<ScalarType, kDim, kDim>
+      R_;  // Measurement noise covariance matrix (assumed constant)
 };
 
 template <KalmanStateType StateType>

@@ -91,7 +91,7 @@ class EvolutionModel {
   const bool kSupport_mh_states_;
 
   Eigen::Matrix<ScalarType, kDim, kDim> F_;  // State transition matrix
-  Eigen::Matrix<ScalarType, kDim, kDim> D_;  // Dynamics noise matrix
+  Eigen::Matrix<ScalarType, kDim, kDim> D_;  // Evolution covariance matrix
 
   MultipleModels<Dim> states_;  // Multiple models for MM states
 };

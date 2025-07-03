@@ -10,6 +10,13 @@ namespace kalman {
 template <KalmanStateType StateType, bool UseSimulatedTime>
 KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
     : evolution_model_(0.05, 0.01, false) {
+  // Set H to the identity matrix for the state vector
+  H_.setIdentity();
+
+  // Set R to a small constant matrix (assumed measurement noise covariance)
+  R_.setIdentity();
+  R_ *= 0.03;  // Small measurement noise
+
   // Initialize the Kalman filter with default parameters
   states_.clear();
   updates_.clear();
@@ -40,7 +47,12 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
 
   // Check if the time is valid or whether we want to rerun a previous
   // prediction
-  if (time < xk_.k_timestamp) {
+  if (time <= xk_.k_timestamp) {
+    // We do not want to predict a state twice, so we return the current state
+    if (time == xk_.k_timestamp) {
+      return xk_;
+    }
+
     // search for the last valid state before the given time (use binary search)
     auto lower = std::lower_bound(
         states_.begin(), states_.end(), time,
@@ -58,8 +70,7 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
   double delta = 0.0;
 
   if constexpr (UseSimulatedTime)
-    delta =
-        time_between_simulated_points_s_ * std::abs(time - prev.k_timestamp);
+    delta = time_between_simulated_points_s_ * (time - prev.k_timestamp);
   else
     delta = (time - prev.k_timestamp) * 1e-9;  // Convert to seconds
 
@@ -76,6 +87,37 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
     return xk_ = curr;
   else
     return curr;  // return the predicted state without updating
+}
+
+template <KalmanStateType StateType, bool UseSimulatedTime>
+const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
+    const UpdateType& update, const TimeStamp& time) {
+  // Calculate the innovation
+  xk_update_.innovation = update - xk_.x.head(kDim);  // zk - H*xk|xk-1
+
+  // Calculate the innovation covariance
+  xk_update_.inv_covariance =
+      H_ * xk_.P * H_.transpose() + R_;  // S = H*P*H^T + R
+
+  // Calculate the Kalman gain
+  xk_update_.kalman_gain =
+      xk_.P * H_.transpose() *
+      xk_update_.inv_covariance.inverse();  // K = P * H^T * S^-1
+
+  xk_update_.k_timestamp = time;
+
+  // Update the state estimate
+  xk_update_.xk.x += xk_update_.kalman_gain *
+                     xk_update_.innovation;  // xk|xk-1 + K * innovation
+  xk_update_.xk.P -=
+      xk_update_.kalman_gain * xk_update_.inv_covariance *
+      xk_update_.kalman_gain.transpose();  // Pk|xk-1 - K * S * K^T
+
+  xk_update_.xk.k_timestamp = time;
+
+  updated_states_.push_back(xk_update_);
+  return xk_ =
+             xk_update_.xk;  // Update the current state for the next prediction
 }
 
 }  // namespace kalman
