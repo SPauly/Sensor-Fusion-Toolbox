@@ -97,7 +97,9 @@ class Channel {
     /// @return Latest data or nullptr if the queue is empty.
     DataPtr FetchLatest() {
       std::lock_guard<std::mutex> lock(mtx_);
-      return latest_data_;
+      DataPtr latest_data = latest_data_;
+      latest_data_.reset();  // Clear latest data after fetching
+      return latest_data;
     }
 
     /// @brief Wait for new data to be published. This will block until new data
