@@ -109,15 +109,19 @@ void KalmanSim::OnUIRender() {
     ImGui::Text("Update to Target Distance: %.3f", upd_dist);
 
     // Settings
-    static float update_interval = 0.05f;
+    static int update_interval = 4;  // In predictions between updates
     static bool enable_retrodiction = false;
+    static int retrodiction_steps = 5;
     ImGui::Separator();
     ImGui::Text("Settings");
-    ImGui::SliderFloat("Update Interval (s)", &update_interval, 0.01f, 1.0f);
+    ImGui::SliderInt("Update Interval (pred/update)", &update_interval, 0, 10);
     ImGui::Checkbox("Enable Retrodiction", &enable_retrodiction);
-
-    ImGui::End();
+    if (enable_retrodiction) {
+      ImGui::SliderInt("Retrodiction Steps", &retrodiction_steps, 1, 10);
+    }
   }
+
+  ImGui::End();
 
   // --- Kalman Filter Metadata Window ---
   if (ImGui::Begin("Kalman Filter Metadata")) {
@@ -156,9 +160,8 @@ void KalmanSim::OnUIRender() {
         ImGui::Text("  %.3f  %.3f", latest_update_.kalman_gain(i, 0),
                     latest_update_.kalman_gain(i, 1));
     }
-
-    ImGui::End();
   }
+  ImGui::End();
 }
 
 void KalmanSim::RunPlotCallback() {

@@ -15,6 +15,7 @@
 #include "sensfus/utils/eventbus.h"
 #include "sensfus/sim/sensor_simulator.h"
 #include "sensfus/sim/sensor_radar.h"
+#include "app/kalman_sim.h"
 #include "app/sensor_viewport.h"
 #include "app/radar_plot.h"
 #include "app/target_plot.h"

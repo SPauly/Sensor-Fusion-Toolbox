@@ -129,6 +129,10 @@ bool SensorSim::Init() {
   target_sub_ = event_bus_->Subscribe<TrueTargetState2D>("TrueTargetState2D");
   radar_sub_ = event_bus_->Subscribe<RadarSensorInfo2D>("RadarSensorInfo2D");
 
+  // Setup Kalman filter layer
+  layer_stack_.PushLayer(
+      std::make_shared<KalmanSim>(0, sim_));  // ID is not used in this case
+
   return true;
 }
 
