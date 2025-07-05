@@ -63,7 +63,7 @@ void SensorRadar::ResetSensor() {
 }
 
 void SensorRadar::RunImpl() {
-  auto update = target_sub_->Fetch();
+  auto update = target_sub_->FetchLatest();
   if (!update) return;
 
   // Update the current state

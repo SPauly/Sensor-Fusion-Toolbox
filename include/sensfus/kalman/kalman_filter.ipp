@@ -11,7 +11,8 @@ template <KalmanStateType StateType, bool UseSimulatedTime>
 KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
     : evolution_model_(0.05, 0.01, false) {
   // Set H to the identity matrix for the state vector
-  H_.setIdentity();
+  H_.setZero();
+  H_.block<2, 2>(0, 0).setIdentity();  // Only position part is measured
 
   // Set R to a small constant matrix (assumed measurement noise covariance)
   R_.setIdentity();
@@ -93,7 +94,7 @@ template <KalmanStateType StateType, bool UseSimulatedTime>
 const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
     const UpdateType& update, const TimeStamp& time) {
   // Calculate the innovation
-  xk_update_.innovation = update - xk_.x.head(kDim);  // zk - H*xk|xk-1
+  xk_update_.innovation = update - H_ * xk_.x;  // zk - H*xk|xk-1
 
   // Calculate the innovation covariance
   xk_update_.inv_covariance =

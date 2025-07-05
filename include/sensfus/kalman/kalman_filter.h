@@ -31,15 +31,14 @@ concept KalmanStateType =
 template <KalmanStateType StateType>
 struct KalmanState {
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
+  TimeStamp k_timestamp;
 
   Eigen::Matrix<ScalarType, kDim * 3, 1>
       x;  // State vector: position, velocity, acceleration
   Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
 
-  TimeStamp k_timestamp;
-
-  size_t index_metadata =
-      0;  // Index in the metadata vector, used for updates/filtering
+  // Store data for retrodiction
+  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> F;  // State transition matrix
 };
 
 template <KalmanStateType StateType>
@@ -52,7 +51,7 @@ struct KalmanStateMetadata {
   Eigen::Matrix<ScalarType, kDim, kDim>
       inv_covariance;  // Innovation covariance
 
-  Eigen::Matrix<ScalarType, kDim, kDim> kalman_gain;  // Kalman gain
+  Eigen::Matrix<ScalarType, kDim * 3, kDim> kalman_gain;  // Kalman gain
 };
 
 template <KalmanStateType StateType>
@@ -140,7 +139,7 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
       0.05;  // Default time step in seconds
 
   // Helpers:
-  Eigen::Matrix<ScalarType, kDim * 3, kDim> H_;  // Measurement matrix
+  Eigen::Matrix<ScalarType, kDim, kDim * 3> H_;  // Measurement matrix
   Eigen::Matrix<ScalarType, kDim, kDim>
       R_;  // Measurement noise covariance matrix (assumed constant)
 };
