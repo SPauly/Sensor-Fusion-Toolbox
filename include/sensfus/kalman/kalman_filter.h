@@ -54,7 +54,7 @@ struct KalmanStateMetadata {
   Eigen::Matrix<ScalarType, kDim * 3, kDim> kalman_gain;  // Kalman gain
 };
 
-template <KalmanStateType StateType>
+template <KalmanStateType StateType, bool UseSimulatedTime = false>
 class KalmanFilterBase {
   // Ensure StateType is either ObjectState2D or ObjectState3D
   static_assert(std::is_same<StateType, ObjectState2D>::value ||
@@ -81,7 +81,7 @@ class KalmanFilterBase {
 };
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
-class KalmanFilter : public KalmanFilterBase<StateType> {
+class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
   using UpdateType = std::conditional_t<std::same_as<StateType, ObjectState2D>,
                                         ObjectPosition2D, ObjectPosition3D>;
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
@@ -144,15 +144,17 @@ class KalmanFilter : public KalmanFilterBase<StateType> {
       R_;  // Measurement noise covariance matrix (assumed constant)
 };
 
-template <KalmanStateType StateType>
-class KalmanFilterWithEventBus : public KalmanFilter<StateType> {
+template <KalmanStateType StateType, bool UseSimulatedTime = false>
+class KalmanFilterWithEventBus
+    : public KalmanFilter<StateType, UseSimulatedTime> {
  public:
   KalmanFilterWithEventBus() = default;
   virtual ~KalmanFilterWithEventBus() = default;
 };
 
-template <KalmanStateType StateType>
-class GUIKalmanFilter : public KalmanFilterBase<StateType> {
+template <KalmanStateType StateType, bool UseSimulatedTime = false>
+class GUIKalmanFilter
+    : public KalmanFilterWithEventBus<StateType, UseSimulatedTime> {
  public:
  private:
 };
