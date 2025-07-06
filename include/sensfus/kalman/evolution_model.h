@@ -54,7 +54,8 @@ class EvolutionModel {
  private:
   void UpdateMatrices() {
     // Evolution Model -> F_(I Tk 0.5*Tk^2, 0 I Tk, 0 0 I)
-    Eigen::Matrix<ScalarType, Dim, Dim> I;
+    Eigen::Matrix<ScalarType, Dim, Dim> I =
+        Eigen::Matrix<ScalarType, Dim, Dim>::Identity();  // Identity matrix
 
     F_.setZero();
 
