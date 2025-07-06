@@ -132,6 +132,9 @@ bool SensorSim::Init() {
   // Setup Kalman filter layer
   kalman_ = std::make_shared<KalmanSim>(0, sim_);
   layer_stack_.PushLayer(kalman_);  // ID is not used in this case
+  sensor_viewport_->RegisterPlotCallback(
+      "Kalman Filter Plot",
+      std::bind(&KalmanSim::RunPlotCallback, kalman_.get()));
 
   return true;
 }
@@ -265,8 +268,7 @@ void SensorSim::SensorControl() {
       update_time_prev = update_time_ms;
 
       // Update the rate of the kalman filter
-      kalman_->GetKalmanFilter()->SetUpdateRate(
-          static_cast<double>(update_time_ms) / 1000.0);
+      kalman_->GetKalmanFilter()->SetUpdateRate(50000.0 * 1e-9);
     }
     HelpMarker(
         "Controls how often the simulation updates. Lower values mean "

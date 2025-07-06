@@ -23,18 +23,30 @@ KalmanSim::KalmanSim(size_t id, std::shared_ptr<sim::SensorSimulator> sim)
 
 void KalmanSim::OnUIRender() {
   // Check for new data
-  auto state = state_sub_->FetchLatest();
+  auto state = state_sub_->Fetch();
   if (state) {
     latest_prediction_ = *state;
-    x_predicted_.push_back(state->x(0));
-    y_predicted_.push_back(state->x(1));
+
+    // Turn them from range and azimuth to x and y coordinates
+    // x_predicted_.push_back(
+    //    latest_prediction_.x(0) *
+    //   std::cos(latest_prediction_.x(1)));  // + radar position
+    // y_predicted_.push_back(latest_prediction_.x(0) *
+    // std::sin(latest_prediction_.x(1)));
+    x_predicted_.push_back(latest_prediction_.x(0));
+    y_predicted_.push_back(latest_prediction_.x(1));
   }
 
-  auto metadata = metadata_sub_->FetchLatest();
+  auto metadata = metadata_sub_->Fetch();
   if (metadata) {
     latest_update_ = *metadata;
-    x_updated_.push_back(metadata->xk.x(0));
-    y_updated_.push_back(metadata->xk.x(1));
+    // x_updated_.push_back(latest_update_.xk.x(0) *
+    //                    std::cos(latest_update_.xk.x(1)));  // + radar
+    //                    position
+    // y_updated_.push_back(latest_update_.xk.x(0) *
+    //                    std::sin(latest_update_.xk.x(1)));
+    x_updated_.push_back(latest_update_.xk.x(0));
+    y_updated_.push_back(latest_update_.xk.x(1));
   }
 
   // --- Kalman Filter Control Window ---
@@ -121,21 +133,63 @@ void KalmanSim::OnUIRender() {
     if (enable_retrodiction) {
       ImGui::SliderInt("Retrodiction Steps", &retrodiction_steps, 1, 10);
     }
+
+    // Show F and D matrices if available
+    if (ImGui::CollapsingHeader("F and D Matrices")) {
+      // State transition matrix F
+      ImGui::Text("State Transition Matrix F:");
+      if (latest_update_.xk.F.rows() > 0 && latest_update_.xk.F.cols() > 0) {
+        if (ImGui::BeginTable("FMatrix", latest_update_.xk.F.cols(),
+                              ImGuiTableFlags_Borders)) {
+          for (int i = 0; i < latest_update_.xk.F.rows(); ++i) {
+            ImGui::TableNextRow();
+            for (int j = 0; j < latest_update_.xk.F.cols(); ++j) {
+              ImGui::TableSetColumnIndex(j);
+              ImGui::Text("%.3f", latest_update_.xk.F(i, j));
+            }
+          }
+          ImGui::EndTable();
+        }
+      } else {
+        ImGui::Text("F matrix not available.");
+      }
+
+      // Evolution covariance matrix D
+      ImGui::Text("Evolution Covariance Matrix D:");
+      if (latest_update_.xk.D.rows() > 0 && latest_update_.xk.D.cols() > 0) {
+        if (ImGui::BeginTable("DMatrix", latest_update_.xk.D.cols(),
+                              ImGuiTableFlags_Borders)) {
+          for (int i = 0; i < latest_update_.xk.D.rows(); ++i) {
+            ImGui::TableNextRow();
+            for (int j = 0; j < latest_update_.xk.D.cols(); ++j) {
+              ImGui::TableSetColumnIndex(j);
+              ImGui::Text("%.3f", latest_update_.xk.D(i, j));
+            }
+          }
+          ImGui::EndTable();
+        }
+      } else {
+        ImGui::Text("D matrix not available.");
+      }
+    }
   }
 
   ImGui::End();
 
   // --- Kalman Filter Metadata Window ---
   if (ImGui::Begin("Kalman Filter Metadata")) {
-    // Covariance matrix P
-    if (ImGui::BeginTable("CovarianceP", 3, ImGuiTableFlags_Borders)) {
+    // Covariance matrix P (6x6)
+    if (ImGui::BeginTable("CovarianceP", 6, ImGuiTableFlags_Borders)) {
       ImGui::TableSetupColumn("P0");
       ImGui::TableSetupColumn("P1");
       ImGui::TableSetupColumn("P2");
+      ImGui::TableSetupColumn("P3");
+      ImGui::TableSetupColumn("P4");
+      ImGui::TableSetupColumn("P5");
       ImGui::TableHeadersRow();
-      for (int i = 0; i < 3; ++i) {
+      for (int i = 0; i < 6; ++i) {
         ImGui::TableNextRow();
-        for (int j = 0; j < 3; ++j) {
+        for (int j = 0; j < 6; ++j) {
           ImGui::TableSetColumnIndex(j);
           ImGui::Text("%.3f", latest_update_.xk.P(i, j));
         }

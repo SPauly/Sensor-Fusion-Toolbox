@@ -44,6 +44,8 @@ struct KalmanState {
 
   // Store data for retrodiction
   Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> F;  // State transition matrix
+  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3>
+      D;  // Evolution covariance matrix (process noise covariance)
 };
 
 template <KalmanStateType StateType>
@@ -187,6 +189,7 @@ class KalmanFilterWithEventBus
         std::thread(&KalmanFilterWithEventBus::RunKalmanFilterLoop, this);
   }
   virtual ~KalmanFilterWithEventBus() {
+    stop_loop_ = true;
     // Stop the Kalman filter loop]
     if (loop_thread_.joinable()) {
       loop_thread_.join();

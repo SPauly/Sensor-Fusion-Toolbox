@@ -9,14 +9,14 @@ namespace kalman {
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
 KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
-    : evolution_model_(0.05, 0.01, false) {
+    : evolution_model_(0.05, 10, false) {
   // Set H to the identity matrix for the state vector
   H_.setZero();
   H_.block<2, 2>(0, 0).setIdentity();  // Only position part is measured
 
   // Set R to a small constant matrix (assumed measurement noise covariance)
   R_.setIdentity();
-  R_ *= 0.03;  // Small measurement noise
+  // R_ *= 0.03;  // Small measurement noise
 
   // Initialize the Kalman filter with default parameters
   states_.clear();
@@ -27,7 +27,9 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   xk_.x.setZero();
   xk_.P.setIdentity();
 
-  xk_.P *= 1000.0;  // Large initial uncertainty
+  xk_.P.block<2, 2>(0, 0) *= 1000;    // Large uncertainty in position
+  xk_.P.block<2, 2>(2, 2) *= 100000;  // Small uncertainty in velocity
+  xk_.P.block<2, 2>(4, 4) *= 100000;  // Small uncertainty in acceleration
 
   if constexpr (!UseSimulatedTime) {
     // If not using simulated time, set the timestamp to the current time
@@ -90,6 +92,10 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
 
   curr.k_timestamp = time;
 
+  // Also safe F and D for retrodiction and debugging
+  curr.F = evolution_model_.F();
+  curr.D = evolution_model_.D();
+
   // only update the current state if the time is valid
   if (time >= xk_.k_timestamp)
     return xk_ = curr;
@@ -99,7 +105,14 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
 const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
-    const UpdateType& update, const TimeStamp& time) {
+    const UpdateType& _update, const TimeStamp& time) {
+  UpdateType update = _update;
+  // convert update from range_azimuth to cartesian
+  update(0) = _update(0) * std::cos(_update(1));
+  update(1) = _update(0) * std::sin(_update(1));
+
+  xk_update_.xk = xk_;  // Start with the current state
+
   // Calculate the innovation
   xk_update_.innovation = update - H_ * xk_.x;  // zk - H*xk|xk-1
 
