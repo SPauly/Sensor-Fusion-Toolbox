@@ -99,6 +99,12 @@ class Channel {
       std::lock_guard<std::mutex> lock(mtx_);
       DataPtr latest_data = latest_data_;
       latest_data_.reset();  // Clear latest data after fetching
+
+      // Empty the queue if latest data is fetched
+      while (!queue_.empty()) {
+        queue_.pop();
+      }
+
       return latest_data;
     }
 

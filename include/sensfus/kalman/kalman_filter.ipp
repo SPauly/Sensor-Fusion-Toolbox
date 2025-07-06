@@ -71,7 +71,7 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
   double delta = 0.0;
 
   if constexpr (UseSimulatedTime)
-    delta = time_between_simulated_points_s_ * (time - prev.k_timestamp);
+    delta = update_rate_s_ * (time - prev.k_timestamp);
   else
     delta = (time - prev.k_timestamp) * 1e-9;  // Convert to seconds
 
@@ -119,6 +119,63 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
   updated_states_.push_back(xk_update_);
   return xk_ =
              xk_update_.xk;  // Update the current state for the next prediction
+}
+
+template <KalmanStateType StateType, bool UseSimulatedTime>
+void KalmanFilterWithEventBus<StateType,
+                              UseSimulatedTime>::RunKalmanFilterLoop() {
+  while (!stop_loop_) {
+    std::unique_lock<std::mutex> lock(mtx_);
+
+    TimeStamp time_now = 0;
+
+    // Predict
+    if constexpr (!UseSimulatedTime) {
+      state_publisher_->Publish(
+          KalmanFilter<StateType, UseSimulatedTime>::Predict(
+              utils::Time::now().toNanoseconds()));
+    } else {
+      auto time =
+          simulated_time_sub_->WaitForData();  // This ensures we update only
+                                               // with the simulated time
+      if (time) {
+        state_publisher_->Publish(
+            KalmanFilter<StateType, UseSimulatedTime>::Predict(*time));
+        time_now = *time;
+      }
+    }
+
+    // Update
+    if (predictions_left_-- == 0) {
+      // Update the Kalman filter with new sensor data
+      auto update = sensor_info_sub_->FetchLatest();
+      if (update) {
+        if constexpr (UseSimulatedTime) {
+          if (time_now != 0) {
+            KalmanFilter<StateType, UseSimulatedTime>::Update(*update,
+                                                              time_now);
+            // Publish the updated state
+            update_publisher_->Publish(xk_update_);
+          }
+        } else {
+          KalmanFilter<StateType, UseSimulatedTime>::Update(
+              *update, utils::Time::now().toNanoseconds());
+          // Publish the updated state
+          update_publisher_->Publish(xk_update_);
+        }
+      }
+      // Reset the predictions left counter
+      predictions_left_ = update_in_steps_;
+    }
+
+    // Wait for the next iteration
+    if constexpr (!UseSimulatedTime) {
+      utils::RateTimer rate_timer(update_rate_s_);
+      lock.unlock();  // Unlock the mutex to allow other threads to access
+      rate_timer.WaitRemaining();  // Wait for the next iteration
+    }
+    // In simulated time we simply wait for the next tick
+  }
 }
 
 }  // namespace kalman
