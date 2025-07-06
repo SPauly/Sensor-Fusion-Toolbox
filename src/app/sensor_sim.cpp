@@ -268,7 +268,7 @@ void SensorSim::SensorControl() {
       update_time_prev = update_time_ms;
 
       // Update the rate of the kalman filter
-      kalman_->GetKalmanFilter()->SetUpdateRate(50000.0 * 1e-9);
+      kalman_->GetKalmanFilter()->SetUpdateRate(5000000000.0 * 1e-9);
     }
     HelpMarker(
         "Controls how often the simulation updates. Lower values mean "

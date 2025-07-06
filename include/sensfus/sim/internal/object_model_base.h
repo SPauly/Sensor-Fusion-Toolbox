@@ -113,7 +113,7 @@ class ObjectModelBase {
   bool is_active_ =
       true;  // Indicate wether this is tied to an active trajectory
 
-  double time_between_points_ns_ = 50000.0;  // Time between points in ns
+  double time_between_points_ns_ = 5000000000.0;  // Time between points in ns
   std::shared_ptr<std::vector<StateType>> states_ = nullptr;
 };
 
