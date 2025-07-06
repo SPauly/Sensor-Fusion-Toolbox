@@ -147,7 +147,7 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
   EvolutionModel<kDim> evolution_model_;
 
   // Metadata
-  double update_rate_s_ = 0.05;  // Default time step in seconds
+  double update_rate_s_ = 0.01;  // Default time step in seconds
 
   // Helpers:
   Eigen::Matrix<ScalarType, kDim, kDim * 3> H_;  // Measurement matrix
@@ -161,6 +161,9 @@ class KalmanFilterWithEventBus
  protected:
   using typename KalmanFilter<StateType, UseSimulatedTime>::UpdateType;
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
+  using SensorInfoType = std::conditional_t<
+      std::same_as<StateType, ObjectState2D>, RadarSensorInfo2D,
+      RadarSensorInfo2D>;  // Type of sensor info used for updates
 
  public:
   explicit KalmanFilterWithEventBus(
@@ -173,7 +176,8 @@ class KalmanFilterWithEventBus
     update_publisher_ = event_bus_->AddChannel<KalmanStateMetadata<StateType>>(
         "KalmanStateMetadata");
     // Subscribe to the sensor info channel
-    sensor_info_sub_ = event_bus_->Subscribe<UpdateType>("SensorInfo");
+    sensor_info_sub_ =
+        event_bus_->Subscribe<SensorInfoType>("RadarSensorInfo2D");
 
     // Subscribe to the simulated time channel
     simulated_time_sub_ = event_bus_->Subscribe<TimeStamp>("SimulatedTime");
@@ -268,7 +272,8 @@ class KalmanFilterWithEventBus
       update_publisher_;
 
   // We get the sensor info over the event bus
-  std::shared_ptr<typename ::sensfus::utils::Channel<UpdateType>::Subscription>
+  std::shared_ptr<
+      typename ::sensfus::utils::Channel<SensorInfoType>::Subscription>
       sensor_info_sub_;
   std::shared_ptr<::sensfus::utils::Channel<TimeStamp>::Subscription>
       simulated_time_sub_;
