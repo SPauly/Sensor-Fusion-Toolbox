@@ -26,6 +26,12 @@ class KalmanSim : public app::utils::Layer {
   virtual void OnDetach() override {}
   virtual void OnUIRender() override;
 
+  std::shared_ptr<kalman::KalmanFilterWithEventBus<ObjectState2D, true>>
+  GetKalmanFilter() const {
+    return std::static_pointer_cast<
+        kalman::KalmanFilterWithEventBus<ObjectState2D, true>>(kalman_);
+  }
+
  private:
   // ID of the Filter
   size_t id_ = 0;

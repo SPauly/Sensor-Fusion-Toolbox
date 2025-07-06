@@ -38,6 +38,13 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   }
 
   states_.push_back(xk_);
+
+  xk_update_.xk = xk_;
+  xk_update_.k_timestamp = xk_.k_timestamp;
+  xk_update_.innovation.setZero();
+  xk_update_.inv_covariance.setZero();
+  xk_update_.kalman_gain.setZero();
+  updated_states_.clear();
 }
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
@@ -135,9 +142,11 @@ void KalmanFilterWithEventBus<StateType,
           KalmanFilter<StateType, UseSimulatedTime>::Predict(
               utils::Time::now().toNanoseconds()));
     } else {
+      lock.unlock();  // Unlock the mutex to allow other threads to access
       auto time =
           simulated_time_sub_->WaitForData();  // This ensures we update only
                                                // with the simulated time
+      lock.lock();  // Lock the mutex again to access shared resources
       if (time) {
         state_publisher_->Publish(
             KalmanFilter<StateType, UseSimulatedTime>::Predict(*time));
@@ -147,25 +156,31 @@ void KalmanFilterWithEventBus<StateType,
 
     // Update
     if (predictions_left_-- == 0) {
+      // Reset the predictions left counter
+      predictions_left_ = update_in_steps_;
       // Update the Kalman filter with new sensor data
       auto update = sensor_info_sub_->FetchLatest();
       if (update) {
+        if (update->range_azimuth.empty()) {
+          // No valid update available, skip this iteration
+          continue;
+        }
+        auto update_extracted = update->range_azimuth.back();
+
         if constexpr (UseSimulatedTime) {
           if (time_now != 0) {
-            KalmanFilter<StateType, UseSimulatedTime>::Update(*update,
+            KalmanFilter<StateType, UseSimulatedTime>::Update(update_extracted,
                                                               time_now);
             // Publish the updated state
             update_publisher_->Publish(this->xk_update_);
           }
         } else {
           KalmanFilter<StateType, UseSimulatedTime>::Update(
-              *update, utils::Time::now().toNanoseconds());
+              update_extracted, utils::Time::now().toNanoseconds());
           // Publish the updated state
           update_publisher_->Publish(this->xk_update_);
         }
       }
-      // Reset the predictions left counter
-      predictions_left_ = update_in_steps_;
     }
 
     // Wait for the next iteration

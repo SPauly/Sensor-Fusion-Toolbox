@@ -130,8 +130,8 @@ bool SensorSim::Init() {
   radar_sub_ = event_bus_->Subscribe<RadarSensorInfo2D>("RadarSensorInfo2D");
 
   // Setup Kalman filter layer
-  layer_stack_.PushLayer(
-      std::make_shared<KalmanSim>(0, sim_));  // ID is not used in this case
+  kalman_ = std::make_shared<KalmanSim>(0, sim_);
+  layer_stack_.PushLayer(kalman_);  // ID is not used in this case
 
   return true;
 }
@@ -263,6 +263,10 @@ void SensorSim::SensorControl() {
     if (update_time_ms != update_time_prev) {
       sim_->SetUpdateRate(static_cast<uint64_t>(update_time_ms * 1e6));
       update_time_prev = update_time_ms;
+
+      // Update the rate of the kalman filter
+      kalman_->GetKalmanFilter()->SetUpdateRate(
+          static_cast<double>(update_time_ms) / 1000.0);
     }
     HelpMarker(
         "Controls how often the simulation updates. Lower values mean "

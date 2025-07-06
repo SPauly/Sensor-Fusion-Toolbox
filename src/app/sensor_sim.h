@@ -81,6 +81,7 @@ class SensorSim : public ApplicationBase {
   ImVec4 *colors_ = nullptr;
   ImGuiStyle *style_ = nullptr;
 
+  std::shared_ptr<KalmanSim> kalman_;
   utils::LayerStack layer_stack_;
 
   // Simulation specific stuff

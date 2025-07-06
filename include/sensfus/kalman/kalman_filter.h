@@ -194,7 +194,7 @@ class KalmanFilterWithEventBus
   }
 
   virtual const KalmanState<StateType> Predict(const TimeStamp& time) override {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::unique_lock<std::mutex> lock(mtx_);
     // Predict the next state
     KalmanState<StateType> predicted_state =
         KalmanFilter<StateType, UseSimulatedTime>::Predict(time);
@@ -209,7 +209,7 @@ class KalmanFilterWithEventBus
 
   virtual const KalmanState<StateType> Update(const UpdateType& update,
                                               const TimeStamp& time) override {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::unique_lock<std::mutex> lock(mtx_);
 
     // Update the state with the new measurement
     KalmanState<StateType> updated_state =
@@ -233,16 +233,13 @@ class KalmanFilterWithEventBus
   }
 
   virtual const EvolutionModel<kDim>& GetEvolutionModel() const override {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::unique_lock<std::mutex> lock(mtx_);
     return KalmanFilter<StateType, UseSimulatedTime>::GetEvolutionModel();
   }
 
   virtual void SetUpdateRate(double update_rate_s) final {
-    std::lock_guard<std::mutex> lock(mtx_);
-    this->update_rate_s_ = update_rate_s;
-
-    // Update the evolution model with the new time step
-    this->evolution_model_.SetDeltaTime(this->update_rate_s_);
+    std::unique_lock<std::mutex> lock(mtx_);
+    KalmanFilter<StateType, UseSimulatedTime>::SetUpdateRate(update_rate_s);
   }
 
   /// @brief Set the update interval in steps. This will be used to determine
@@ -250,7 +247,7 @@ class KalmanFilterWithEventBus
   /// regard to the predicted time step.
   /// @param update_in_steps The number of steps till the next update.
   virtual void SetUpdateInterval(const TimeStep& update_in_steps) final {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::unique_lock<std::mutex> lock(mtx_);
     update_in_steps_ = update_in_steps;
     predictions_left_ = update_in_steps_;
   }
