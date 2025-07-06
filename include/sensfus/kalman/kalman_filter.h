@@ -18,7 +18,7 @@ namespace sensfus {
 
 namespace kalman {
 
-using TimeStamp = size_t;
+using TimeStamp = TimeStepIdType;
 using TimeStep = long long;
 
 // Define a concept for KalmanStateType so that we can ensure that only
@@ -87,6 +87,7 @@ class KalmanFilterBase {
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
 class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
+ protected:
   using UpdateType = std::conditional_t<std::same_as<StateType, ObjectState2D>,
                                         ObjectPosition2D, ObjectPosition3D>;
   static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
@@ -157,10 +158,15 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
 class KalmanFilterWithEventBus
     : public KalmanFilter<StateType, UseSimulatedTime> {
+ protected:
+  using typename KalmanFilter<StateType, UseSimulatedTime>::UpdateType;
+  static constexpr int kDim = std::same_as<StateType, ObjectState2D> ? 2 : 3;
+
  public:
   explicit KalmanFilterWithEventBus(
       std::shared_ptr<::sensfus::utils::EventBus> event_bus)
-      : KalmanFilter(), event_bus_(std::move(event_bus)) {
+      : KalmanFilter<StateType, UseSimulatedTime>(),
+        event_bus_(std::move(event_bus)) {
     // Initialize the publishers for state and update
     state_publisher_ =
         event_bus_->AddChannel<KalmanState<StateType>>("KalmanState");
@@ -207,7 +213,7 @@ class KalmanFilterWithEventBus
 
     // Publish the updated state
     if (update_publisher_) {
-      update_publisher_->Publish(xk_update_);
+      update_publisher_->Publish(this->xk_update_);
     }
 
     return updated_state;
@@ -224,15 +230,15 @@ class KalmanFilterWithEventBus
 
   virtual const EvolutionModel<kDim>& GetEvolutionModel() const override {
     std::lock_guard<std::mutex> lock(mtx_);
-    return evolution_model_;
+    return KalmanFilter<StateType, UseSimulatedTime>::GetEvolutionModel();
   }
 
   virtual void SetUpdateRate(double update_rate_s) final {
     std::lock_guard<std::mutex> lock(mtx_);
-    update_rate_s_ = update_rate_s;
+    this->update_rate_s_ = update_rate_s;
 
     // Update the evolution model with the new time step
-    evolution_model_.SetDeltaTime(update_rate_s_);
+    this->evolution_model_.SetDeltaTime(this->update_rate_s_);
   }
 
   /// @brief Set the update interval in steps. This will be used to determine
@@ -256,14 +262,13 @@ class KalmanFilterWithEventBus
 
   std::shared_ptr<::sensfus::utils::EventBus> event_bus_;
 
-  std::shared_ptr<::sensfus::utils::EventBus::Publisher<KalmanState<StateType>>>
+  std::shared_ptr<::sensfus::utils::Publisher<KalmanState<StateType>>>
       state_publisher_;
-  std::shared_ptr<
-      ::sensfus::utils::EventBus::Publisher<KalmanStateMetadata<StateType>>>
+  std::shared_ptr<::sensfus::utils::Publisher<KalmanStateMetadata<StateType>>>
       update_publisher_;
 
   // We get the sensor info over the event bus
-  std::shared_ptr<::sensfus::utils::Channel<UpdateType>::Subscription>
+  std::shared_ptr<typename ::sensfus::utils::Channel<UpdateType>::Subscription>
       sensor_info_sub_;
   std::shared_ptr<::sensfus::utils::Channel<TimeStamp>::Subscription>
       simulated_time_sub_;

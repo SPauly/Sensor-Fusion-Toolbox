@@ -8,8 +8,6 @@ namespace app {
 
 KalmanSim::KalmanSim(size_t id, std::shared_ptr<sim::SensorSimulator> sim)
     : id_(id), sim_(std::move(sim)) {
-  kalman_ = std::make_shared<kalman::GUIKalmanFilter<ObjectState2D, true>>();
-
   event_bus_ = sim_->GetEventBus();
 
   state_sub_ =
@@ -17,6 +15,10 @@ KalmanSim::KalmanSim(size_t id, std::shared_ptr<sim::SensorSimulator> sim)
   metadata_sub_ =
       event_bus_->Subscribe<kalman::KalmanStateMetadata<ObjectState2D>>(
           "KalmanStateMetadata");
+
+  kalman_ =
+      std::make_shared<kalman::KalmanFilterWithEventBus<ObjectState2D, true>>(
+          event_bus_);
 }
 
 void KalmanSim::OnUIRender() {

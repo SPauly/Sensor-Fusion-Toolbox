@@ -155,13 +155,13 @@ void KalmanFilterWithEventBus<StateType,
             KalmanFilter<StateType, UseSimulatedTime>::Update(*update,
                                                               time_now);
             // Publish the updated state
-            update_publisher_->Publish(xk_update_);
+            update_publisher_->Publish(this->xk_update_);
           }
         } else {
           KalmanFilter<StateType, UseSimulatedTime>::Update(
               *update, utils::Time::now().toNanoseconds());
           // Publish the updated state
-          update_publisher_->Publish(xk_update_);
+          update_publisher_->Publish(this->xk_update_);
         }
       }
       // Reset the predictions left counter
@@ -170,7 +170,7 @@ void KalmanFilterWithEventBus<StateType,
 
     // Wait for the next iteration
     if constexpr (!UseSimulatedTime) {
-      utils::RateTimer rate_timer(update_rate_s_);
+      utils::RateTimer rate_timer(this->update_rate_s_);
       lock.unlock();  // Unlock the mutex to allow other threads to access
       rate_timer.WaitRemaining();  // Wait for the next iteration
     }

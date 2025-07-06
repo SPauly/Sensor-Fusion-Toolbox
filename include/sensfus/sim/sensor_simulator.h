@@ -119,6 +119,9 @@ class SensorSimulator : public internal::SimBase {
   // Event bus for communication
   std::shared_ptr<utils::EventBus> event_bus_;
   std::shared_ptr<utils::Publisher<TrueTargetState2D>> target_pub_;
+
+  // We also need to publish simulated time
+  std::shared_ptr<utils::Publisher<TimeStepIdType>> simulated_time_pub_;
 };
 
 }  // namespace sim
