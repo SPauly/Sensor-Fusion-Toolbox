@@ -27,12 +27,6 @@ void KalmanSim::OnUIRender() {
   if (state) {
     latest_prediction_ = *state;
 
-    // Turn them from range and azimuth to x and y coordinates
-    // x_predicted_.push_back(
-    //    latest_prediction_.x(0) *
-    //   std::cos(latest_prediction_.x(1)));  // + radar position
-    // y_predicted_.push_back(latest_prediction_.x(0) *
-    // std::sin(latest_prediction_.x(1)));
     x_predicted_.push_back(latest_prediction_.x(0));
     y_predicted_.push_back(latest_prediction_.x(1));
   }
@@ -40,11 +34,7 @@ void KalmanSim::OnUIRender() {
   auto metadata = metadata_sub_->Fetch();
   if (metadata) {
     latest_update_ = *metadata;
-    // x_updated_.push_back(latest_update_.xk.x(0) *
-    //                    std::cos(latest_update_.xk.x(1)));  // + radar
-    //                    position
-    // y_updated_.push_back(latest_update_.xk.x(0) *
-    //                    std::sin(latest_update_.xk.x(1)));
+
     x_updated_.push_back(latest_update_.xk.x(0));
     y_updated_.push_back(latest_update_.xk.x(1));
   }
@@ -123,12 +113,24 @@ void KalmanSim::OnUIRender() {
     ImGui::Text("Update to Target Distance: %.3f", upd_dist);
 
     // Settings
-    static int update_interval = 4;  // In predictions between updates
+    static int update_interval = 4,
+               prev_update_interval = 0;  // In predictions between updates
     static bool enable_retrodiction = false;
     static int retrodiction_steps = 5;
     ImGui::Separator();
     ImGui::Text("Settings");
     ImGui::SliderInt("Update Interval (pred/update)", &update_interval, 0, 10);
+    if (update_interval != prev_update_interval) {
+      // Update the Kalman filter with the new interval
+      std::static_pointer_cast<
+          kalman::KalmanFilterWithEventBus<ObjectState2D, true>>(kalman_)
+          ->SetUpdateInterval(update_interval);
+      prev_update_interval = update_interval;
+    }
+
+    static bool enable_dynamic_update = false;
+    ImGui::Checkbox("Enable dynamic update interval", &enable_dynamic_update);
+
     ImGui::Checkbox("Enable Retrodiction", &enable_retrodiction);
     if (enable_retrodiction) {
       ImGui::SliderInt("Retrodiction Steps", &retrodiction_steps, 1, 10);
