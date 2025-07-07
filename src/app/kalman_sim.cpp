@@ -215,7 +215,7 @@ void KalmanSim::OnUIRender() {
       // Kalman gain
       ImGui::Text("Kalman Gain:");
       for (int i = 0; i < 6; ++i)
-        ImGui::Text("  %.3f  %.3f", latest_update_.kalman_gain(i, 0),
+        ImGui::Text("  %.20f  %.20f", latest_update_.kalman_gain(i, 0),
                     latest_update_.kalman_gain(i, 1));
     }
   }
@@ -224,13 +224,20 @@ void KalmanSim::OnUIRender() {
 
 void KalmanSim::RunPlotCallback() {
   // This function will be called to render the plot
-  ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 2.0f);
+  ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3.0f);
+  ImPlot::PushStyleColor(ImPlotCol_MarkerFill, IM_COL32(100, 200, 255, 255));
+  ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, IM_COL32(50, 150, 255, 255));
   ImPlot::PlotScatter("Predicted", x_predicted_.data(), y_predicted_.data(),
                       (int)x_predicted_.size());
+  ImPlot::PopStyleColor(2);  // Pop marker colors
 
-  ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 2.0f);
+  ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3.0f);
+  ImPlot::PushStyleColor(ImPlotCol_MarkerFill, IM_COL32(0, 255, 0, 255));
+  ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, IM_COL32(0, 200, 0, 255));
   ImPlot::PlotScatter("Updated", x_updated_.data(), y_updated_.data(),
                       (int)x_updated_.size());
+
+  ImPlot::PopStyleColor(2);  // Pop marker colors
 }
 }  // namespace app
 }  // namespace sensfus

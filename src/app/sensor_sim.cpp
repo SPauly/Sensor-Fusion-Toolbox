@@ -201,10 +201,26 @@ bool SensorSim::Init() {
       "Kalman Filter Plot",
       std::bind(&KalmanSim::RunPlotCallback, kalman_.get()));
 
+  // Setup default start state
+  // sim_->StartSimulation();
+  radar_sensors_.push_back(sim_->AddRadarSensor());
+  radar_sensors_.back()->SetSensorPosition(ObjectPosition2D(0.0, 0.0));
+
+  radar_plots_.push_back(std::make_shared<RadarPlot>(
+      radar_sensors_.back()->GetId(), sim_, radar_sensors_.back()));
+
+  // Register the necessary gui callbacks
+  std::string tmp =
+      "Radar Sensor " + std::to_string(radar_sensors_.back()->GetId());
+  sensor_viewport_->RegisterPlotCallback(tmp,
+                                         radar_plots_.back()->GetCallback());
+
   return true;
 }
 
 void SensorSim::Shutdown() {
+  sim_->StartSimulation();
+
   // Shutdown layers
   layer_stack_.clear();
   kalman_.reset();

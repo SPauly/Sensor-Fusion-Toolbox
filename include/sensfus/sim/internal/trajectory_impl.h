@@ -199,8 +199,8 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
  private:
   mutable std::mutex mtx_;
 
-  bool enable_wrap_around_ = false;  // If true, the trajectory will wrap around
-                                     // when accessing out of bounds indices.
+  bool enable_wrap_around_ = true;  // If true, the trajectory will wrap around
+                                    // when accessing out of bounds indices.
 
   std::shared_ptr<std::vector<StateType>> states_;
 
