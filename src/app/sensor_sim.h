@@ -66,8 +66,8 @@ class SensorSim : public ApplicationBase {
   bool submitting_feedback_ = false;
 
   // Appearence
-  const int display_w_ = 1400;
-  const int display_h_ = 950;
+  const int display_w_ = 2200;
+  const int display_h_ = 1200;
   int temp_display_w_, temp_display_h_;  // for temporary use
   const ImGuiWindowFlags closed_workspace_flags_ = ImGuiWindowFlags_NoCollapse |
                                                    ImGuiWindowFlags_NoMove |

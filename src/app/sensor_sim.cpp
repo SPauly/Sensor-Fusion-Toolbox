@@ -54,13 +54,15 @@ void SensorSim::Run() {
 }
 
 bool SensorSim::Init() {
-  // Begin: ImGui Window Init
-
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) return false;
+#ifdef _WIN32
+  // Make process DPI aware (Windows 10+)
+  SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+#endif
 
-  // Decide GL+GLSL versions
+// Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
   // GL ES 2.0 + GLSL 100
   const char *glsl_version = "#version 100";
@@ -84,6 +86,13 @@ bool SensorSim::Init() {
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1);  // Enable vsync
 
+  // --- DPI scaling logic ---
+  float xscale = 1.0f, yscale = 1.0f;
+  glfwGetWindowContentScale(window_, &xscale, &yscale);
+  xscale = (xscale > 1.5f) ? 1.5f : xscale;  // Limit scaling to 1.5x
+  yscale = (yscale > 1.5f) ? 1.5f : yscale;  // Limit scaling to 1.5x
+  float dpi_scale = (xscale > 1.0f) ? xscale : 1.0f;
+
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -103,14 +112,70 @@ bool SensorSim::Init() {
   // Set the style
   ConfigWindow();
 
+  // Scale ImGui style
+  ImGuiStyle &style = ImGui::GetStyle();
+  style.ScaleAllSizes(dpi_scale);
+
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window_, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
+
+  // Scale fonts
+  io_->Fonts->Clear();
+  io_->Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf",
+                                 16.0f * dpi_scale);
+  io_->FontGlobalScale =
+      1.0f;  // Don't use FontGlobalScale if you scale font size
 
   // End ImGui Window Init
 
   // Setup the ImPlot context
   ImPlot::CreateContext();
+
+  // --- ImPlot DPI scaling ---
+  ImPlotStyle &plotStyle = ImPlot::GetStyle();
+  plotStyle.LineWeight *= dpi_scale;
+  plotStyle.MarkerSize *= dpi_scale;
+  plotStyle.MarkerWeight *= dpi_scale;
+  plotStyle.FillAlpha *= 1.0f;  // usually not needed
+  plotStyle.ErrorBarSize *= dpi_scale;
+  plotStyle.ErrorBarWeight *= dpi_scale;
+  plotStyle.DigitalBitHeight *= dpi_scale;
+  plotStyle.DigitalBitGap *= dpi_scale;
+  plotStyle.PlotBorderSize *= dpi_scale;
+  plotStyle.MinorAlpha *= 1.0f;
+  plotStyle.MajorTickLen.x *= dpi_scale;
+  plotStyle.MajorTickLen.y *= dpi_scale;
+  plotStyle.MinorTickLen.x *= dpi_scale;
+  plotStyle.MinorTickLen.y *= dpi_scale;
+  plotStyle.MajorTickSize.x *= dpi_scale;
+  plotStyle.MajorTickSize.y *= dpi_scale;
+  plotStyle.MinorTickSize.x *= dpi_scale;
+  plotStyle.MinorTickSize.y *= dpi_scale;
+  plotStyle.MajorGridSize.x *= dpi_scale;
+  plotStyle.MajorGridSize.y *= dpi_scale;
+  plotStyle.MinorGridSize.x *= dpi_scale;
+  plotStyle.MinorGridSize.y *= dpi_scale;
+  plotStyle.PlotPadding.x *= dpi_scale;
+  plotStyle.PlotPadding.y *= dpi_scale;
+  plotStyle.LabelPadding.x *= dpi_scale;
+  plotStyle.LabelPadding.y *= dpi_scale;
+  plotStyle.LegendPadding.x *= dpi_scale;
+  plotStyle.LegendPadding.y *= dpi_scale;
+  plotStyle.LegendInnerPadding.x *= dpi_scale;
+  plotStyle.LegendInnerPadding.y *= dpi_scale;
+  plotStyle.LegendSpacing.x *= dpi_scale;
+  plotStyle.LegendSpacing.y *= dpi_scale;
+  plotStyle.MousePosPadding.x *= dpi_scale;
+  plotStyle.MousePosPadding.y *= dpi_scale;
+  plotStyle.AnnotationPadding.x *= dpi_scale;
+  plotStyle.AnnotationPadding.y *= dpi_scale;
+  plotStyle.FitPadding.x *= dpi_scale;
+  plotStyle.FitPadding.y *= dpi_scale;
+  plotStyle.PlotDefaultSize.x *= dpi_scale;
+  plotStyle.PlotDefaultSize.y *= dpi_scale;
+  plotStyle.PlotMinSize.x *= dpi_scale;
+  plotStyle.PlotMinSize.y *= dpi_scale;
 
   viewport_ = ImGui::GetMainViewport();
 
