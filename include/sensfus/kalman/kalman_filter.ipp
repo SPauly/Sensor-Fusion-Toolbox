@@ -106,6 +106,7 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
 template <KalmanStateType StateType, bool UseSimulatedTime>
 const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
     const UpdateType& _update, const TimeStamp& time) {
+  /// TODO: Remove this cheeky lazy hack
   UpdateType update = _update;
   // convert update from range_azimuth to cartesian
   update(0) = _update(0) * std::cos(_update(1));

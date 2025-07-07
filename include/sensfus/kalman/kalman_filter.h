@@ -184,13 +184,16 @@ class KalmanFilterWithEventBus
     // Subscribe to the simulated time channel
     simulated_time_sub_ = event_bus_->Subscribe<TimeStamp>("SimulatedTime");
 
+    // Update the rate of the kalman filter
+    SetUpdateRate(5000000000.0 * 1e-9);
+
     // Start the Kalman filter loop
     loop_thread_ =
         std::thread(&KalmanFilterWithEventBus::RunKalmanFilterLoop, this);
   }
   virtual ~KalmanFilterWithEventBus() {
     stop_loop_ = true;
-    // Stop the Kalman filter loop]
+    // Stop the Kalman filter loop
     if (loop_thread_.joinable()) {
       loop_thread_.join();
     }

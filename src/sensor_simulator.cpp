@@ -54,6 +54,9 @@ SensorSimulator::~SensorSimulator() {
 
   // stop the radar sensors
   radar_sensors_.clear();
+
+  // send one last tick to wake waiting threads
+  simulated_time_pub_->Publish(curr_index_);
 }
 
 void SensorSimulator::StartSimulation() {

@@ -23,7 +23,10 @@ class KalmanSim : public app::utils::Layer {
 
   // Layer interface
   virtual void OnAttach() override {}
-  virtual void OnDetach() override {}
+  virtual void OnDetach() override {
+    kalman_.reset();
+    sim_.reset();
+  }
   virtual void OnUIRender() override;
 
   std::shared_ptr<kalman::KalmanFilterWithEventBus<ObjectState2D, true>>
