@@ -145,6 +145,39 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
 }
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
+const std::vector<KalmanState<StateType>>
+KalmanFilter<StateType, UseSimulatedTime>::Retrodict() {
+  // Store x_l+1|l so that we do not have to recompute the states
+  auto x_pred = states_.back();
+  auto x_retro = x_pred;  // Start with the last predicted state
+
+  // Retrodict the last `retrodict_steps_` states
+  int start = static_cast<int>(states_.size()) - 2;
+  int end = std::max(0, start - static_cast<int>(retrodict_steps_));
+  for (int l = start; l >= end; l--) {
+    auto& curr = states_.at(l);
+    auto backup = curr;  // Backup the current state before retrodicting
+
+    auto& W = updated_states_.at(l).kalman_gain;
+
+    W = curr.P * x_pred.F.transpose() * x_pred.P.inverse();
+
+    curr.x += W * (x_retro.x - x_pred.x);
+    curr.P += W * (x_retro.P - x_pred.P) * W.transpose();
+
+    x_retro = curr;   // Update the retrodicted state
+    x_pred = backup;  // Restore the predicted state for the next iteration
+  }
+
+  // Return the retrodicted states
+  std::vector<KalmanState<StateType>> retrodicted_states;
+  retrodicted_states.reserve(states_.size() - end);
+  retrodicted_states.insert(retrodicted_states.end(), states_.begin() + end,
+                            states_.end());
+  return retrodicted_states;
+}
+
+template <KalmanStateType StateType, bool UseSimulatedTime>
 void KalmanFilterWithEventBus<StateType,
                               UseSimulatedTime>::RunKalmanFilterLoop() {
   while (!stop_loop_) {

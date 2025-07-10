@@ -108,9 +108,7 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
     return std::vector<KalmanState<StateType>>();
   }
 
-  virtual const std::vector<KalmanState<StateType>> Retrodict() override {
-    return std::vector<KalmanState<StateType>>();
-  }
+  virtual const std::vector<KalmanState<StateType>> Retrodict() override;
 
   virtual const EvolutionModel<kDim>& GetEvolutionModel() const override {
     return evolution_model_;
@@ -150,6 +148,10 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
 
   // Metadata
   double update_rate_s_ = 0.01;  // Default time step in seconds
+
+  size_t retrodict_steps_ = 10;  // Number of steps to retrodict
+  size_t steps_to_prediction_ =
+      10;  // Number of steps to predict in the future (for retrodiction)
 
   // Helpers:
   Eigen::Matrix<ScalarType, kDim, kDim * 3> H_;  // Measurement matrix
