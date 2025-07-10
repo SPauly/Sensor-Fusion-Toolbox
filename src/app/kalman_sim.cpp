@@ -12,6 +12,8 @@ KalmanSim::KalmanSim(size_t id, std::shared_ptr<sim::SensorSimulator> sim)
 
   state_sub_ =
       event_bus_->Subscribe<kalman::KalmanState<ObjectState2D>>("KalmanState");
+  retro_sub_ = event_bus_->Subscribe<kalman::KalmanState<ObjectState2D>>(
+      "KalmanRetrodictState");
   metadata_sub_ =
       event_bus_->Subscribe<kalman::KalmanStateMetadata<ObjectState2D>>(
           "KalmanStateMetadata");
@@ -37,6 +39,12 @@ void KalmanSim::OnUIRender() {
 
     x_updated_.push_back(latest_update_.xk.x(0));
     y_updated_.push_back(latest_update_.xk.x(1));
+  }
+
+  auto retro_state = retro_sub_->Fetch();
+  if (retro_state) {
+    x_retro_.push_back(retro_state->x(0));
+    y_retro_.push_back(retro_state->x(1));
   }
 
   // --- Kalman Filter Control Window ---
@@ -236,6 +244,14 @@ void KalmanSim::RunPlotCallback() {
   ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, IM_COL32(0, 200, 0, 255));
   ImPlot::PlotScatter("Updated", x_updated_.data(), y_updated_.data(),
                       (int)x_updated_.size());
+
+  ImPlot::PopStyleColor(2);  // Pop marker colors
+
+  ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3.0f);
+  ImPlot::PushStyleColor(ImPlotCol_MarkerFill, IM_COL32(255, 0, 0, 255));
+  ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, IM_COL32(200, 0, 0, 255));
+  ImPlot::PlotScatter("Retrodicted", x_retro_.data(), y_retro_.data(),
+                      (int)x_retro_.size());
 
   ImPlot::PopStyleColor(2);  // Pop marker colors
 }

@@ -47,13 +47,14 @@ class KalmanSim : public app::utils::Layer {
   std::shared_ptr<::sensfus::utils::EventBus> event_bus_;
   std::shared_ptr<::sensfus::utils::Channel<
       kalman::KalmanState<ObjectState2D>>::Subscription>
-      state_sub_;
+      state_sub_, retro_sub_;
   std::shared_ptr<::sensfus::utils::Channel<
       kalman::KalmanStateMetadata<ObjectState2D>>::Subscription>
       metadata_sub_;
 
   // Store Kalman state for display
-  std::vector<double> x_predicted_, y_predicted_, x_updated_, y_updated_;
+  std::vector<double> x_predicted_, y_predicted_, x_updated_, y_updated_,
+      x_retro_, y_retro_;
 
   // Store some current metadata
   kalman::KalmanStateMetadata<ObjectState2D> latest_update_;

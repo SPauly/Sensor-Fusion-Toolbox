@@ -149,9 +149,7 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
   // Metadata
   double update_rate_s_ = 0.01;  // Default time step in seconds
 
-  size_t retrodict_steps_ = 10;  // Number of steps to retrodict
-  size_t steps_to_prediction_ =
-      10;  // Number of steps to predict in the future (for retrodiction)
+  TimeStamp retrodict_steps_ = 5;  // Number of steps to retrodict
 
   // Helpers:
   Eigen::Matrix<ScalarType, kDim, kDim * 3> H_;  // Measurement matrix
@@ -177,6 +175,8 @@ class KalmanFilterWithEventBus
     // Initialize the publishers for state and update
     state_publisher_ =
         event_bus_->AddChannel<KalmanState<StateType>>("KalmanState");
+    retrodict_publisher_ =
+        event_bus_->AddChannel<KalmanState<StateType>>("KalmanRetrodictState");
     update_publisher_ = event_bus_->AddChannel<KalmanStateMetadata<StateType>>(
         "KalmanStateMetadata");
     // Subscribe to the sensor info channel
@@ -237,7 +237,17 @@ class KalmanFilterWithEventBus
   }
 
   virtual const std::vector<KalmanState<StateType>> Retrodict() override {
-    return std::vector<KalmanState<StateType>>();
+    std::unique_lock<std::mutex> lock(mtx_);
+
+    // Retrodict the last retrodict_steps_ states
+    auto ret = KalmanFilter<StateType, UseSimulatedTime>::Retrodict();
+
+    if (retrodict_publisher_) {
+      for (const auto& state : ret) {
+        retrodict_publisher_->Publish(state);
+      }
+    }
+    return ret;
   }
 
   virtual const EvolutionModel<kDim>& GetEvolutionModel() const override {
@@ -272,7 +282,7 @@ class KalmanFilterWithEventBus
   std::shared_ptr<::sensfus::utils::EventBus> event_bus_;
 
   std::shared_ptr<::sensfus::utils::Publisher<KalmanState<StateType>>>
-      state_publisher_;
+      state_publisher_, retrodict_publisher_;
   std::shared_ptr<::sensfus::utils::Publisher<KalmanStateMetadata<StateType>>>
       update_publisher_;
 
@@ -287,6 +297,9 @@ class KalmanFilterWithEventBus
   TimeStamp update_in_steps_ = 4;  // Number of steps till next update
   TimeStamp predictions_left_ =
       4;  // Number of predictions left before next update
+
+  TimeStamp retrodict_in_steps_ =
+      this->retrodict_steps_;  // Number of steps to retrodict
 };
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>

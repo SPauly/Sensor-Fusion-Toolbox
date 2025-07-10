@@ -42,13 +42,16 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   }
 
   states_.push_back(xk_);
+  updated_states_.push_back(
+      KalmanStateMetadata<StateType>());  // Initialize with empty metadata
+  updated_states_.back().xk =
+      xk_;  // Initialize the update metadata with the current state
 
   xk_update_.xk = xk_;
   xk_update_.k_timestamp = xk_.k_timestamp;
   xk_update_.innovation.setZero();
   xk_update_.inv_covariance.setZero();
   xk_update_.kalman_gain.setZero();
-  updated_states_.clear();
 }
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
@@ -108,6 +111,9 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
 template <KalmanStateType StateType, bool UseSimulatedTime>
 const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
     const UpdateType& _update, const TimeStamp& time) {
+  // only update if the time is valid
+  if (time != xk_.k_timestamp) return xk_;
+
   /// TODO: Remove this cheeky lazy hack
   UpdateType update = _update;
   // convert update from range_azimuth to cartesian
@@ -139,7 +145,10 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
 
   xk_update_.xk.k_timestamp = time;
 
+  // Store the predicted and updated step for later retrodiction
   updated_states_.push_back(xk_update_);
+  states_.push_back(xk_);
+
   return xk_ =
              xk_update_.xk;  // Update the current state for the next prediction
 }
@@ -147,33 +156,30 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Update(
 template <KalmanStateType StateType, bool UseSimulatedTime>
 const std::vector<KalmanState<StateType>>
 KalmanFilter<StateType, UseSimulatedTime>::Retrodict() {
-  // Store x_l+1|l so that we do not have to recompute the states
-  auto x_pred = states_.back();
-  auto x_retro = x_pred;  // Start with the last predicted state
+  std::vector<KalmanState<StateType>> retrodicted_states;
+  retrodicted_states.push_back(updated_states_.back().xk);
 
-  // Retrodict the last `retrodict_steps_` states
   int start = static_cast<int>(states_.size()) - 2;
   int end = std::max(0, start - static_cast<int>(retrodict_steps_));
-  for (int l = start; l >= end; l--) {
-    auto& curr = states_.at(l);
-    auto backup = curr;  // Backup the current state before retrodicting
+  for (int l = start; l >= end; --l) {
+    auto& x_pred = states_.at(l + 1);               // x_{l+1|l}
+    auto& x_update = updated_states_.at(l + 1).xk;  // x_{l+1|k}
+    auto& curr = updated_states_.at(l).xk;          // x_{l|l}
 
-    auto& W = updated_states_.at(l).kalman_gain;
+    auto W = curr.P * x_pred.F.transpose() * x_pred.P.inverse();
 
-    W = curr.P * x_pred.F.transpose() * x_pred.P.inverse();
+    curr.x += W * (x_update.x - x_pred.x);
+    curr.P += W * (x_update.P - x_pred.P) * W.transpose();
 
-    curr.x += W * (x_retro.x - x_pred.x);
-    curr.P += W * (x_retro.P - x_pred.P) * W.transpose();
-
-    x_retro = curr;   // Update the retrodicted state
-    x_pred = backup;  // Restore the predicted state for the next iteration
+    retrodicted_states.push_back(curr);
   }
 
-  // Return the retrodicted states
-  std::vector<KalmanState<StateType>> retrodicted_states;
-  retrodicted_states.reserve(states_.size() - end);
-  retrodicted_states.insert(retrodicted_states.end(), states_.begin() + end,
-                            states_.end());
+  states_.clear();          // Clear the states to avoid confusion
+  updated_states_.clear();  // Clear the updated states to avoid confusion
+  states_.push_back(retrodicted_states.front());
+  updated_states_.push_back(
+      xk_update_);  // Store the last state and update for retrodiction
+
   return retrodicted_states;
 }
 
@@ -228,6 +234,19 @@ void KalmanFilterWithEventBus<StateType,
               update_extracted, utils::Time::now().toNanoseconds());
           // Publish the updated state
           update_publisher_->Publish(this->xk_update_);
+        }
+      }
+
+      // Retrodict the updated states only if we have enough data
+      if (retrodict_in_steps_-- == 0) {
+        // Reset the retrodict in steps counter
+        retrodict_in_steps_ = this->retrodict_steps_;
+        // Retrodict the last `retrodict_steps_` states
+        auto ret = KalmanFilter<StateType, UseSimulatedTime>::Retrodict();
+        if (retrodict_publisher_) {
+          for (const auto& state : ret) {
+            retrodict_publisher_->Publish(state);
+          }
         }
       }
     }
