@@ -8,7 +8,7 @@
 
 #include "sensfus/types.h"
 #include "sensfus/utils/eventbus.h"
-#include "sensfus/internal/sensor_base.h"
+#include "sensfus/sim/internal/sensor_base.h"
 
 namespace sensfus {
 namespace sim {
@@ -142,9 +142,9 @@ class SensorRadar : public internal::SensorBase<ObjectState2D> {
   // Sensor deviation
   double cartesian_std_dev_ =
       0.0;  // Standard deviation of the cartesian coordinates
-  double range_std_dev_ = 0.0;  // Standard deviation of the range measurement
+  double range_std_dev_ = 15.0;  // Standard deviation of the range measurement
   double azimuth_std_dev_ =
-      0.0;  // Standard deviation of the azimuth measurement
+      0.15;  // Standard deviation of the azimuth measurement
   Eigen::Matrix<ScalarType, 2, 6> H_;
 
   // Sensor position

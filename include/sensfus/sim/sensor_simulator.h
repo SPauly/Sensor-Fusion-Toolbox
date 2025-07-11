@@ -8,11 +8,11 @@
 
 #include "sensfus/types.h"
 #include "sensfus/utils/eventbus.h"
-#include "sensfus/internal/sim_base.h"
+#include "sensfus/sim/internal/sim_base.h"
 #include "sensfus/sim/sensor_radar.h"
 #include "sensfus/sim/object_model.h"
 #include "sensfus/sim/trajectory.h"
-#include "sensfus/internal/trajectory_impl.h"
+#include "sensfus/sim/internal/trajectory_impl.h"
 
 namespace sensfus {
 namespace sim {
@@ -119,6 +119,9 @@ class SensorSimulator : public internal::SimBase {
   // Event bus for communication
   std::shared_ptr<utils::EventBus> event_bus_;
   std::shared_ptr<utils::Publisher<TrueTargetState2D>> target_pub_;
+
+  // We also need to publish simulated time
+  std::shared_ptr<utils::Publisher<TimeStepIdType>> simulated_time_pub_;
 };
 
 }  // namespace sim

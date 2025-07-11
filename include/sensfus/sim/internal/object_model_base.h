@@ -1,18 +1,22 @@
-#ifndef SENSFUS_SIM_OBJECT_MODEL_BASE_H
-#define SENSFUS_SIM_OBJECT_MODEL_BASE_H
+#ifndef SENSFUS_SIM_INTERNAL_OBJECT_MODEL_BASE_H
+#define SENSFUS_SIM_INTERNAL_OBJECT_MODEL_BASE_H
 
+#include <cmath>
 #include <memory>
 #include <vector>
 #include <mutex>
 
+#include <Eigen/Dense>
+
 #include "sensfus/types.h"
 
 namespace sensfus {
+namespace sim {
 namespace internal {
 template <typename StateType>
 class TrajectoryImpl;
-}
-namespace sim {
+}  // namespace internal
+
 class SensorSimulator;
 
 /// @brief Physics model for the object. This class is used to apply the
@@ -109,7 +113,7 @@ class ObjectModelBase {
   bool is_active_ =
       true;  // Indicate wether this is tied to an active trajectory
 
-  double time_between_points_ns_ = 50000.0;  // Time between points in ns
+  double time_between_points_ns_ = 5000000000.0;  // Time between points in ns
   std::shared_ptr<std::vector<StateType>> states_ = nullptr;
 };
 
@@ -170,4 +174,4 @@ class BasicVelocityModel : public ObjectModelBase<StateType> {
 
 }  // namespace sensfus
 
-#endif  // SENSFUS_SIM_OBJECT_MODEL_BASE_H
+#endif  // SENSFUS_SIM_INTERNAL_OBJECT_MODEL_BASE_H

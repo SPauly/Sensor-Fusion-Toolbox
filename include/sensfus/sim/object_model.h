@@ -2,7 +2,7 @@
 #define SENSFUS_SIM_OBJECT_MODEL_H
 
 #include "sensfus/types.h"
-#include "sensfus/internal/object_model_base.h"
+#include "sensfus/sim/internal/object_model_base.h"
 #include "sensfus/sim/object_model_Wave.h"
 
 namespace sensfus {

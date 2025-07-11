@@ -1,7 +1,8 @@
-#ifndef INTERNAL_SENSOR_SIM_BASE_H
-#define INTERNAL_SENSOR_SIM_BASE_H
+#ifndef SIM_INTERNAL_SENSOR_SIM_BASE_H
+#define SIM_INTERNAL_SENSOR_SIM_BASE_H
 
 namespace sensfus {
+namespace sim {
 namespace internal {
 
 /// @brief Base class for sensor simulation. This class is used to create a
@@ -27,7 +28,7 @@ class SimBase {
 };
 
 }  // namespace internal
-
+}  // namespace sim
 }  // namespace sensfus
 
-#endif  // INTERNAL_SENSOR_SIM_BASE_H
+#endif  // SIM_INTERNAL_SENSOR_SIM_BASE_H

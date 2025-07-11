@@ -15,6 +15,7 @@
 #include "sensfus/utils/eventbus.h"
 #include "sensfus/sim/sensor_simulator.h"
 #include "sensfus/sim/sensor_radar.h"
+#include "app/kalman_sim.h"
 #include "app/sensor_viewport.h"
 #include "app/radar_plot.h"
 #include "app/target_plot.h"
@@ -29,7 +30,7 @@ class SensorSim : public ApplicationBase {
   explicit SensorSim();
   virtual ~SensorSim() {};
 
-  virtual void Run() override;
+  virtual bool Run() override;
 
  protected:
   virtual bool Init() override;
@@ -65,8 +66,8 @@ class SensorSim : public ApplicationBase {
   bool submitting_feedback_ = false;
 
   // Appearence
-  const int display_w_ = 1400;
-  const int display_h_ = 950;
+  const int display_w_ = 2200;
+  const int display_h_ = 1200;
   int temp_display_w_, temp_display_h_;  // for temporary use
   const ImGuiWindowFlags closed_workspace_flags_ = ImGuiWindowFlags_NoCollapse |
                                                    ImGuiWindowFlags_NoMove |
@@ -80,6 +81,7 @@ class SensorSim : public ApplicationBase {
   ImVec4 *colors_ = nullptr;
   ImGuiStyle *style_ = nullptr;
 
+  std::shared_ptr<KalmanSim> kalman_;
   utils::LayerStack layer_stack_;
 
   // Simulation specific stuff
@@ -97,6 +99,7 @@ class SensorSim : public ApplicationBase {
   std::vector<std::shared_ptr<RadarPlot>> radar_plots_;
 
   std::shared_ptr<SensorViewport> sensor_viewport_;
+  bool respawn_flag_ = false;
 };
 
 }  // namespace app

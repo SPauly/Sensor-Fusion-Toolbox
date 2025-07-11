@@ -57,6 +57,15 @@ class StdNormalGenerator
   using VectorType = Eigen::Matrix<Scalar, Size, 1>;
 
   StdNormalGenerator() : gen(std::random_device{}()), dist(0.0, 1.0) {}
+  StdNormalGenerator(Scalar center, Scalar covar)
+      : gen(std::random_device{}()), dist(center, covar) {}
+
+  /// @brief Reset the center and covariance of the NormalDistribution
+  /// @param center Center
+  /// @param covar Covariance
+  void SetParams(Scalar center, Scalar covar) {
+    dist = std::normal_distribution<Scalar>(center, covar);
+  }
 
  protected:
   VectorType sampleImpl() {

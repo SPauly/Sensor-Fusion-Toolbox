@@ -1,5 +1,5 @@
-#ifndef SENSFUS_INTERNAL_TRAJECTORY_IMPL_H
-#define SENSFUS_INTERNAL_TRAJECTORY_IMPL_H
+#ifndef SENSFUS_SIM_INTERNAL_TRAJECTORY_IMPL_H
+#define SENSFUS_SIM_INTERNAL_TRAJECTORY_IMPL_H
 
 #include <Eigen/Dense>
 #include <vector>
@@ -12,6 +12,7 @@
 #include "sensfus/sim/trajectory.h"
 
 namespace sensfus {
+namespace sim {
 namespace internal {
 
 /// @brief Wrapper to handle creation and access to a trajectory of an object
@@ -198,8 +199,8 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
  private:
   mutable std::mutex mtx_;
 
-  bool enable_wrap_around_ = false;  // If true, the trajectory will wrap around
-                                     // when accessing out of bounds indices.
+  bool enable_wrap_around_ = true;  // If true, the trajectory will wrap around
+                                    // when accessing out of bounds indices.
 
   std::shared_ptr<std::vector<StateType>> states_;
 
@@ -208,7 +209,7 @@ class TrajectoryImpl : public sensfus::sim::Trajectory<StateType> {
 };
 
 }  // namespace internal
-
+}  // namespace sim
 }  // namespace sensfus
 
-#endif  // SENSFUS_INTERNAL_TRAJECTORY_IMPL_H
+#endif  // SENSFUS_SIM_INTERNAL_TRAJECTORY_IMPL_H

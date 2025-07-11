@@ -48,9 +48,9 @@ class RadarPlot {
       range_a_y_;  // Cartesian coordinates as estimated by the sensor
 
   // Control variables for gui
-  float stddev_cartesian_ = 5.0, stddev_range_ = 2.0,
+  float stddev_cartesian_ = 5.0, stddev_range_ = 15.0,
         stddev_azimuth_ =
-            0.02;  // Standard deviation of the sensor measurements
+            0.19;  // Standard deviation of the sensor measurements
   float pos_x_ = 0.0, pos_y_ = 0.0;  // Position of the sensor
 
   bool show_cartesian_ = true,

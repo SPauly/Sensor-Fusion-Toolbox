@@ -9,7 +9,7 @@ class ApplicationBase {
   explicit ApplicationBase() = default;
   virtual ~ApplicationBase() = default;
 
-  virtual void Run() = 0;
+  virtual bool Run() = 0;
 
  protected:
   virtual bool Init() = 0;

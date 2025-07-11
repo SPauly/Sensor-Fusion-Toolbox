@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <sensfus/internal/trajectory_impl.h>
+#include <sensfus/sim/internal/trajectory_impl.h>
 #include <sensfus/types.h>
 
 namespace sensfus {

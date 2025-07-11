@@ -19,6 +19,8 @@ SensorSimulator::SensorSimulator() {
   // Get the event bus and publisher
   target_pub_ = event_bus_->AddChannel<TrueTargetState2D>("TrueTargetState2D");
 
+  simulated_time_pub_ = event_bus_->AddChannel<TimeStepIdType>("SimulatedTime");
+
   sim_thread_ = std::jthread([this](std::stop_token stoken) {
     while (!stoken.stop_requested()) {
       std::unique_lock<std::mutex> lock(mtx_);
@@ -52,6 +54,9 @@ SensorSimulator::~SensorSimulator() {
 
   // stop the radar sensors
   radar_sensors_.clear();
+
+  // send one last tick to wake waiting threads
+  simulated_time_pub_->Publish(curr_index_);
 }
 
 void SensorSimulator::StartSimulation() {
@@ -124,6 +129,8 @@ void SensorSimulator::RunImpl() {
   /// TODO: Implement this
 
   curr_index_++;
+  // Publish the current simulation step
+  simulated_time_pub_->Publish(curr_index_);
 }
 
 void SensorSimulator::SetUpdateRate(TimeStepIdType rate_ns) {

@@ -63,7 +63,7 @@ void SensorRadar::ResetSensor() {
 }
 
 void SensorRadar::RunImpl() {
-  auto update = target_sub_->Fetch();
+  auto update = target_sub_->FetchLatest();
   if (!update) return;
 
   // Update the current state
@@ -89,10 +89,8 @@ void SensorRadar::RunImpl() {
     // Update the range and azimuth
     ObjectPosition2D temp2;
 
-    temp2 << sqrt((target_pos(0) - radar_position_(0)) *
-                      (target_pos(0) - radar_position_(0)) +
-                  (target_pos(1) - radar_position_(1)) *
-                      (target_pos(1) - radar_position_(1))),
+    temp2 << sqrt(std::pow((target_pos(0) - radar_position_(0)), 2) +
+                  std::pow((target_pos(1) - radar_position_(1)), 2)),
         std::atan2((target_pos(1) - radar_position_(1)),
                    (target_pos(0) - radar_position_(0)));
 

@@ -24,6 +24,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Eigen)
 
 #----------------------------------#
+# Create kalmanlib library
+#----------------------------------#
+
+add_library(kalmanlib INTERFACE)
+
+target_include_directories(kalmanlib INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
+target_link_libraries(kalmanlib INTERFACE Eigen3::Eigen)
+
+#----------------------------------#
 # Create senssimlib library
 #----------------------------------#
 
@@ -52,6 +65,7 @@ include(cmake/target_imgui_implot_glfw.cmake)
 
 set(SENSOR_SIM_APP_TARGETS
   src/app/entry_point.cpp
+  src/app/kalman_sim.cpp
   src/app/radar_plot.cpp
   src/app/sensor_sim.cpp
   src/app/sensor_viewport.cpp
@@ -77,6 +91,7 @@ target_include_directories(SensorSimulator PRIVATE
 
 target_link_libraries(SensorSimulator PRIVATE
    senssimlib
+   kalmanlib
    ${TARGET_LIBRARIES}
    Eigen3::Eigen
 )
