@@ -27,9 +27,9 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   xk_.x.setZero();
   xk_.P.setIdentity();
 
-  // Assume correlation between x,y values and velocity and acceleration ->
+    // Assume correlation between x,y values and velocity and acceleration ->
   xk_.P.block<2, 2>(0, 0) = Eigen::Matrix<ScalarType, 2, 2>::Ones() *
-                            1;  // Small uncertainty in position
+                            100;  // Small uncertainty in position
   xk_.P.block<2, 2>(2, 2) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 100;
   xk_.P.block<2, 2>(4, 4) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 100;
 
@@ -52,6 +52,9 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   xk_update_.innovation.setZero();
   xk_update_.inv_covariance.setZero();
   xk_update_.kalman_gain.setZero();
+
+  SetProcessNoise(process_noise_);
+  SetMeasurementNoise(meas_noise_);
 }
 
 template <KalmanStateType StateType, bool UseSimulatedTime>

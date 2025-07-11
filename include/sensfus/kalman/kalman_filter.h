@@ -170,7 +170,7 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
   Eigen::Matrix<ScalarType, kDim, kDim>
       R_;  // Measurement noise covariance matrix (assumed constant)
 
-  double meas_noise_ = 0.03, process_noise_ = 0.01;
+  double meas_noise_ = 10000.0, process_noise_ = 10000.0;
 };
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
@@ -320,9 +320,9 @@ class KalmanFilterWithEventBus
       simulated_time_sub_;
 
   // Store current situation
-  TimeStamp update_in_steps_ = 4;  // Number of steps till next update
+  TimeStamp update_in_steps_ = 2;  // Number of steps till next update
   TimeStamp predictions_left_ =
-      4;  // Number of predictions left before next update
+      2;  // Number of predictions left before next update
 
   TimeStamp retrodict_in_steps_ =
       this->retrodict_steps_;  // Number of steps to retrodict

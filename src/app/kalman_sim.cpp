@@ -50,11 +50,15 @@ void KalmanSim::OnUIRender() {
   // --- Kalman Filter Control Window ---
   if (ImGui::Begin("Kalman Filter Control")) {
     // Show latest prediction and update in a table
-    if (ImGui::BeginTable("PredictionUpdateTable", 3,
+    if (ImGui::BeginTable("PredictionUpdateTable", 7,
                           ImGuiTableFlags_Borders)) {
       ImGui::TableSetupColumn("Step");
       ImGui::TableSetupColumn("x");
       ImGui::TableSetupColumn("y");
+      ImGui::TableSetupColumn("velo_x");
+      ImGui::TableSetupColumn("velo_y");
+      ImGui::TableSetupColumn("acc_x");
+      ImGui::TableSetupColumn("acc_y");
       ImGui::TableHeadersRow();
 
       // Prediction row
@@ -65,6 +69,14 @@ void KalmanSim::OnUIRender() {
       ImGui::Text("%.3f", latest_prediction_.x(0));
       ImGui::TableSetColumnIndex(2);
       ImGui::Text("%.3f", latest_prediction_.x(1));
+      ImGui::TableSetColumnIndex(3);
+      ImGui::Text("%.3f", latest_prediction_.x(2));
+      ImGui::TableSetColumnIndex(4);
+      ImGui::Text("%.3f", latest_prediction_.x(3));
+      ImGui::TableSetColumnIndex(5);
+      ImGui::Text("%.3f", latest_prediction_.x(4));
+      ImGui::TableSetColumnIndex(6);
+      ImGui::Text("%.3f", latest_prediction_.x(5));
 
       // Ground truth row (set to 0 for now)
       ImGui::TableNextRow();
@@ -73,6 +85,14 @@ void KalmanSim::OnUIRender() {
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("%.3f", 0.0);
       ImGui::TableSetColumnIndex(2);
+      ImGui::Text("%.3f", 0.0);
+      ImGui::TableSetColumnIndex(3);
+      ImGui::Text("%.3f", 0.0);
+      ImGui::TableSetColumnIndex(4);
+      ImGui::Text("%.3f", 0.0);
+      ImGui::TableSetColumnIndex(5);
+      ImGui::Text("%.3f", 0.0);
+      ImGui::TableSetColumnIndex(6);
       ImGui::Text("%.3f", 0.0);
 
       // Difference row
@@ -83,6 +103,14 @@ void KalmanSim::OnUIRender() {
       ImGui::Text("%.3f", latest_prediction_.x(0) - 0.0);
       ImGui::TableSetColumnIndex(2);
       ImGui::Text("%.3f", latest_prediction_.x(1) - 0.0);
+      ImGui::TableSetColumnIndex(3);
+      ImGui::Text("%.3f", latest_prediction_.x(2) - 0.0);
+      ImGui::TableSetColumnIndex(4);
+      ImGui::Text("%.3f", latest_prediction_.x(3) - 0.0);
+      ImGui::TableSetColumnIndex(5);
+      ImGui::Text("%.3f", latest_prediction_.x(4) - 0.0);
+      ImGui::TableSetColumnIndex(6);
+      ImGui::Text("%.3f", latest_prediction_.x(5) - 0.0);
 
       // Update row
       ImGui::TableNextRow();
@@ -92,6 +120,14 @@ void KalmanSim::OnUIRender() {
       ImGui::Text("%.3f", latest_update_.xk.x(0));
       ImGui::TableSetColumnIndex(2);
       ImGui::Text("%.3f", latest_update_.xk.x(1));
+      ImGui::TableSetColumnIndex(3);
+      ImGui::Text("%.3f", latest_update_.xk.x(2));
+      ImGui::TableSetColumnIndex(4);
+      ImGui::Text("%.3f", latest_update_.xk.x(3));
+      ImGui::TableSetColumnIndex(5);
+      ImGui::Text("%.3f", latest_update_.xk.x(4));
+      ImGui::TableSetColumnIndex(6);
+      ImGui::Text("%.3f", latest_update_.xk.x(5));
 
       // Update difference row
       ImGui::TableNextRow();
@@ -101,6 +137,14 @@ void KalmanSim::OnUIRender() {
       ImGui::Text("%.3f", latest_update_.xk.x(0) - 0.0);
       ImGui::TableSetColumnIndex(2);
       ImGui::Text("%.3f", latest_update_.xk.x(1) - 0.0);
+      ImGui::TableSetColumnIndex(3);
+      ImGui::Text("%.3f", latest_update_.xk.x(2) - 0.0);
+      ImGui::TableSetColumnIndex(4);
+      ImGui::Text("%.3f", latest_update_.xk.x(3) - 0.0);
+      ImGui::TableSetColumnIndex(5);
+      ImGui::Text("%.3f", latest_update_.xk.x(4) - 0.0);
+      ImGui::TableSetColumnIndex(6);
+      ImGui::Text("%.3f", latest_update_.xk.x(5) - 0.0);
 
       ImGui::EndTable();
     }
