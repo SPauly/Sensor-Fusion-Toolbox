@@ -213,7 +213,7 @@ void KalmanSim::OnUIRender() {
             ImGui::TableNextRow();
             for (int j = 0; j < latest_update_.xk.F.cols(); ++j) {
               ImGui::TableSetColumnIndex(j);
-              ImGui::Text("%.3f", latest_update_.xk.F(i, j));
+              ImGui::Text("%.3lf", latest_update_.xk.F(i, j));
             }
           }
           ImGui::EndTable();
@@ -231,7 +231,7 @@ void KalmanSim::OnUIRender() {
             ImGui::TableNextRow();
             for (int j = 0; j < latest_update_.xk.D.cols(); ++j) {
               ImGui::TableSetColumnIndex(j);
-              ImGui::Text("%.3f", latest_update_.xk.D(i, j));
+              ImGui::Text("%.3lf", latest_update_.xk.D(i, j));
             }
           }
           ImGui::EndTable();
@@ -259,7 +259,7 @@ void KalmanSim::OnUIRender() {
         ImGui::TableNextRow();
         for (int j = 0; j < 6; ++j) {
           ImGui::TableSetColumnIndex(j);
-          ImGui::Text("%.3f", latest_update_.xk.P(i, j));
+          ImGui::Text("%.3lf", latest_update_.xk.P(i, j));
         }
       }
       ImGui::EndTable();
@@ -270,18 +270,18 @@ void KalmanSim::OnUIRender() {
       // Innovation
       ImGui::Text("Innovation:");
       for (int i = 0; i < 2; ++i)
-        ImGui::Text("  %.3f", latest_update_.innovation(i));
+        ImGui::Text("  %.3lf", latest_update_.innovation(i));
 
       // Innovation covariance
       ImGui::Text("Innovation Covariance:");
       for (int i = 0; i < 2; ++i)
-        ImGui::Text("  %.3f  %.3f", latest_update_.inv_covariance(i, 0),
+        ImGui::Text("  %.20lf  %.20lf", latest_update_.inv_covariance(i, 0),
                     latest_update_.inv_covariance(i, 1));
 
       // Kalman gain
       ImGui::Text("Kalman Gain:");
       for (int i = 0; i < 6; ++i)
-        ImGui::Text("  %.20f  %.20f", latest_update_.kalman_gain(i, 0),
+        ImGui::Text("  %.20lf  %.20lf", latest_update_.kalman_gain(i, 0),
                     latest_update_.kalman_gain(i, 1));
     }
   }

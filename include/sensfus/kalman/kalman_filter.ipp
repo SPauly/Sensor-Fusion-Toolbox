@@ -27,11 +27,11 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   xk_.x.setZero();
   xk_.P.setIdentity();
 
-    // Assume correlation between x,y values and velocity and acceleration ->
+  // Assume correlation between x,y values and velocity and acceleration ->
   xk_.P.block<2, 2>(0, 0) = Eigen::Matrix<ScalarType, 2, 2>::Ones() *
-                            100;  // Small uncertainty in position
-  xk_.P.block<2, 2>(2, 2) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 100;
-  xk_.P.block<2, 2>(4, 4) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 100;
+                            10000;  // Small uncertainty in position
+  xk_.P.block<2, 2>(2, 2) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 1000;
+  xk_.P.block<2, 2>(4, 4) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 1000;
 
   if constexpr (!UseSimulatedTime) {
     // If not using simulated time, set the timestamp to the current time
