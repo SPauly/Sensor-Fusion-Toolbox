@@ -9,14 +9,14 @@ namespace kalman {
 
 template <KalmanStateType StateType, bool UseSimulatedTime>
 KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
-    : evolution_model_(0.05, 10000, false) {
+    : evolution_model_(5.0, process_noise_, false) {
   // Set H to the identity matrix for the state vector
   H_.setZero();
   H_.block<2, 2>(0, 0).setIdentity();  // Only position part is measured
 
   // Set R to a small constant matrix (assumed measurement noise covariance)
   R_.setIdentity();
-  R_ *= 10000;  // We have large uncertainty in the measurement noise
+  R_ *= meas_noise_;  // We have large uncertainty in the measurement noise
 
   // Initialize the Kalman filter with default parameters
   states_.clear();
@@ -27,11 +27,11 @@ KalmanFilter<StateType, UseSimulatedTime>::KalmanFilter()
   xk_.x.setZero();
   xk_.P.setIdentity();
 
+  // Assume correlation between x,y values and velocity and acceleration ->
   xk_.P.block<2, 2>(0, 0) = Eigen::Matrix<ScalarType, 2, 2>::Ones() *
-                            1;  // Large uncertainty in position
+                            1;  // Small uncertainty in position
   xk_.P.block<2, 2>(2, 2) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 100;
-  xk_.P.block<2, 2>(4, 4) = Eigen::Matrix<ScalarType, 2, 2>::Ones() *
-                            100;  // Small uncertainty in acceleration
+  xk_.P.block<2, 2>(4, 4) = Eigen::Matrix<ScalarType, 2, 2>::Ones() * 100;
 
   if constexpr (!UseSimulatedTime) {
     // If not using simulated time, set the timestamp to the current time
@@ -91,9 +91,9 @@ const KalmanState<StateType> KalmanFilter<StateType, UseSimulatedTime>::Predict(
 
   evolution_model_.SetDeltaTime(delta);
 
-  curr.x = evolution_model_.F() * prev.x;
+  curr.x = evolution_model_.F() * prev.x;  // xk|xk-1 = F*xk-1
   curr.P = evolution_model_.F() * prev.P * evolution_model_.F().transpose() +
-           evolution_model_.D();
+           evolution_model_.D();  // Pk|xk-1 = F*Pk-1*F^T + D
 
   curr.k_timestamp = time;
 

@@ -39,13 +39,15 @@ struct KalmanState {
   TimeStamp k_timestamp = 0;  // Timestamp of the state
 
   Eigen::Matrix<ScalarType, kDim * 3, 1>
-      x;  // State vector: position, velocity, acceleration
-  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> P;  // Covariance matrix
+      x;  // State vector: position, velocity, acceleration (6,1)
+  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3>
+      P;  // Prediction Covariance matrix (6,6)
 
   // Store data for retrodiction
-  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3> F;  // State transition matrix
   Eigen::Matrix<ScalarType, kDim * 3, kDim * 3>
-      D;  // Evolution covariance matrix (process noise covariance)
+      F;  // State transition matrix (6,6)
+  Eigen::Matrix<ScalarType, kDim * 3, kDim * 3>
+      D;  // Evolution covariance matrix (process noise covariance) (6,6)
 };
 
 template <KalmanStateType StateType>
@@ -54,11 +56,12 @@ struct KalmanStateMetadata {
   TimeStamp k_timestamp = 0;  // Timestamp of the state
   KalmanState<StateType> xk;  // State vector and covariance
 
-  Eigen::Matrix<ScalarType, kDim, 1> innovation;  // Innovation vector
+  Eigen::Matrix<ScalarType, kDim, 1>
+      innovation;  // Innovation vector (zk - H*xk) (2,1)
   Eigen::Matrix<ScalarType, kDim, kDim>
-      inv_covariance;  // Innovation covariance
+      inv_covariance;  // Innovation covariance (2,2)
 
-  Eigen::Matrix<ScalarType, kDim * 3, kDim> kalman_gain;  // Kalman gain
+  Eigen::Matrix<ScalarType, kDim * 3, kDim> kalman_gain;  // Kalman gain (6,2)
 };
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
@@ -127,6 +130,17 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
     evolution_model_.SetDeltaTime(update_rate_s_);
   }
 
+  virtual void SetMeasurementNoise(double meas_noise) {
+    meas_noise_ = meas_noise;
+    R_.setIdentity();
+    R_ *= meas_noise_;
+  }
+
+  virtual void SetProcessNoise(double process_noise) {
+    process_noise_ = process_noise;
+    evolution_model_.SetProcessNoiseVariance(process_noise_);
+  }
+
  protected:
   // not the best design but for simplicity, the derived classes will have
   // access to the KalmanStates
@@ -155,6 +169,8 @@ class KalmanFilter : public KalmanFilterBase<StateType, UseSimulatedTime> {
   Eigen::Matrix<ScalarType, kDim, kDim * 3> H_;  // Measurement matrix
   Eigen::Matrix<ScalarType, kDim, kDim>
       R_;  // Measurement noise covariance matrix (assumed constant)
+
+  double meas_noise_ = 0.03, process_noise_ = 0.01;
 };
 
 template <KalmanStateType StateType, bool UseSimulatedTime = false>
@@ -268,6 +284,16 @@ class KalmanFilterWithEventBus
     std::unique_lock<std::mutex> lock(mtx_);
     update_in_steps_ = update_in_steps;
     predictions_left_ = update_in_steps_;
+  }
+
+  virtual void SetMeasurementNoise(double meas_noise) final {
+    std::unique_lock<std::mutex> lock(mtx_);
+    KalmanFilter<StateType, UseSimulatedTime>::SetMeasurementNoise(meas_noise);
+  }
+
+  virtual void SetProcessNoise(double process_noise) final {
+    std::unique_lock<std::mutex> lock(mtx_);
+    KalmanFilter<StateType, UseSimulatedTime>::SetProcessNoise(process_noise);
   }
 
  protected:

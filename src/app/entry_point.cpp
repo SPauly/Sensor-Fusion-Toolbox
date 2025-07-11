@@ -11,8 +11,12 @@ int main(int argc, char **argv) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
-  sensfus::app::SensorSim app;
-  app.Run();
+  while (true) {
+    sensfus::app::SensorSim app;
+    if (!app.Run()) {
+      break;
+    }
+  }
   return 0;
 }
 

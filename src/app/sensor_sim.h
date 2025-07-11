@@ -30,7 +30,7 @@ class SensorSim : public ApplicationBase {
   explicit SensorSim();
   virtual ~SensorSim() {};
 
-  virtual void Run() override;
+  virtual bool Run() override;
 
  protected:
   virtual bool Init() override;
@@ -99,6 +99,7 @@ class SensorSim : public ApplicationBase {
   std::vector<std::shared_ptr<RadarPlot>> radar_plots_;
 
   std::shared_ptr<SensorViewport> sensor_viewport_;
+  bool respawn_flag_ = false;
 };
 
 }  // namespace app

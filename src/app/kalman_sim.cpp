@@ -125,6 +125,7 @@ void KalmanSim::OnUIRender() {
                prev_update_interval = 0;  // In predictions between updates
     static bool enable_retrodiction = false;
     static int retrodiction_steps = 5;
+    static float meas_noise = 10000.0, process_noise = 10000.0;
     ImGui::Separator();
     ImGui::Text("Settings");
     ImGui::SliderInt("Update Interval (pred/update)", &update_interval, 0, 10);
@@ -142,6 +143,19 @@ void KalmanSim::OnUIRender() {
     ImGui::Checkbox("Enable Retrodiction", &enable_retrodiction);
     if (enable_retrodiction) {
       ImGui::SliderInt("Retrodiction Steps", &retrodiction_steps, 1, 10);
+    }
+
+    ImGui::InputFloat("Measurement Noise R", &meas_noise, 0.0f, 0.0f, "%.3f");
+    ImGui::InputFloat("Process Noise", &process_noise, 0.0f, 0.0f, "%.3f");
+
+    if (ImGui::Button("Apply Settings")) {
+      // Apply the settings to the Kalman filter
+      std::static_pointer_cast<
+          kalman::KalmanFilterWithEventBus<ObjectState2D, true>>(kalman_)
+          ->SetMeasurementNoise(meas_noise);
+      std::static_pointer_cast<
+          kalman::KalmanFilterWithEventBus<ObjectState2D, true>>(kalman_)
+          ->SetProcessNoise(process_noise);
     }
 
     // Show F and D matrices if available
@@ -254,6 +268,13 @@ void KalmanSim::RunPlotCallback() {
                       (int)x_retro_.size());
 
   ImPlot::PopStyleColor(2);  // Pop marker colors
+
+  ImPlot::PlotLine("Smoothed", x_retro_.data(), y_retro_.data(),
+                   x_retro_.size());
+
+  ImPlot::SetNextLineStyle(ImVec4(1, 0, 0, 0.5f));  // semi-transparent red
+  ImPlot::PlotLine("Filtered", x_updated_.data(), y_updated_.data(),
+                   (int)x_updated_.size());
 }
 }  // namespace app
 }  // namespace sensfus

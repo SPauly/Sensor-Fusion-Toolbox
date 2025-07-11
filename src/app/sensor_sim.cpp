@@ -38,19 +38,25 @@ static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void SensorSim::Run() {
+bool SensorSim::Run() {
   // Init the graphics application
   if (!Init()) {
     std::cerr << "Failed to initialize the application." << std::endl;
-    return;
+    return false;
   }
 
   // Main loop
-  while (Render()) {
+  bool ret = true;
+  while (ret = Render()) {
     // Handle events here
   }
 
   Shutdown();
+
+  if (respawn_flag_)
+    return true;
+  else
+    return false;
 }
 
 bool SensorSim::Init() {
@@ -290,6 +296,8 @@ bool SensorSim::Render() {
 
   glfwSwapBuffers(window_);
 
+  if (respawn_flag_) return false;
+
   return true;
 }
 
@@ -366,6 +374,7 @@ void SensorSim::SensorControl() {
     ImGui::SameLine();
     if (ImGui::Button("Reset Simulation")) {
       sim_->ResetSimulation();
+      respawn_flag_ = true;
     }
 
     ImGui::Separator();

@@ -2,6 +2,7 @@
 #define SENSFUS_APP_KALMAN_SIM_H
 
 #include <functional>
+#include <deque>
 #include <vector>
 #include <memory>
 
